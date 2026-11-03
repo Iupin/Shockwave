@@ -378,6 +378,12 @@ button {
   padding: 0;
 }
 
+.card .album-link {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+}
+
 .album-link:hover {
   color: var(--text);
   text-decoration: underline;

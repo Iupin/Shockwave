@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.4.0
+
+Open an artist from a song.
+
+### Added
+
+- Artist names are clickable. That opens an artist page with every song by that artist.
+- The now-playing bar, album page, song tiles, and track lists all link to the artist.
+- Play all from the artist page.
+
+### Installer
+
+- `Shockwave-Setup-1.4.0.exe`
+- `Shockwave-Setup-1.4.0.exe.blockmap`
+- `latest.yml`
+
 ## 1.3.0
 
 Open an album from a song.

@@ -10,13 +10,14 @@ type View =
   | { kind: 'library' }
   | { kind: 'playlist'; id: string }
   | { kind: 'album'; artist: string; album: string }
+  | { kind: 'artist'; artist: string }
 
 const emptyState: AppState = {
   repositoryPath: null,
   tracks: [],
   playlists: [],
   settings: { volume: 0.8, repeat: 'off', shuffle: false },
-  appVersion: '1.3.0'
+  appVersion: '1.4.0'
 }
 
 function formatTime(seconds: number): string {
@@ -47,6 +48,16 @@ function tracksForAlbum(tracks: Track[], artist: string, album: string): Track[]
     (track) =>
       track.artist.trim().toLowerCase() === artistKey && track.album.trim().toLowerCase() === albumKey
   )
+}
+
+function isUnknownArtist(artist: string): boolean {
+  const value = artist.trim().toLowerCase()
+  return !value || value === 'unknown artist'
+}
+
+function tracksForArtist(tracks: Track[], artist: string): Track[] {
+  const artistKey = artist.trim().toLowerCase()
+  return tracks.filter((track) => track.artist.trim().toLowerCase() === artistKey)
 }
 
 export default function App(): JSX.Element {
@@ -111,6 +122,11 @@ export default function App(): JSX.Element {
   const openAlbum = (track: Track): void => {
     if (isUnknownAlbum(track.album)) return
     goTo({ kind: 'album', artist: track.artist, album: track.album })
+  }
+
+  const openArtist = (track: Track): void => {
+    if (isUnknownArtist(track.artist)) return
+    goTo({ kind: 'artist', artist: track.artist })
   }
 
   const liked = state.playlists.find((p) => p.id === 'liked')
@@ -388,6 +404,8 @@ export default function App(): JSX.Element {
   const albumTracks =
     view.kind === 'album' ? tracksForAlbum(state.tracks, view.artist, view.album) : []
   const albumCover = albumTracks.find((track) => track.coverId) ?? albumTracks[0]
+  const artistTracks = view.kind === 'artist' ? tracksForArtist(state.tracks, view.artist) : []
+  const artistCover = artistTracks.find((track) => track.coverId) ?? artistTracks[0]
 
   const homeRecent = state.tracks.slice(0, 12)
   const hour = new Date().getHours()
@@ -512,7 +530,19 @@ export default function App(): JSX.Element {
                           </span>
                         </div>
                         <h3>{track.title}</h3>
-                        <p>{track.artist}</p>
+                        {isUnknownArtist(track.artist) ? (
+                          <p>{track.artist}</p>
+                        ) : (
+                          <span
+                            className="album-link"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              openArtist(track)
+                            }}
+                          >
+                            {track.artist}
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>
@@ -571,6 +601,7 @@ export default function App(): JSX.Element {
                   onEdit={openEdit}
                   onDelete={setPendingDelete}
                   onAlbum={openAlbum}
+                  onArtist={openArtist}
                 />
               </>
             )}
@@ -588,6 +619,7 @@ export default function App(): JSX.Element {
                   onEdit={openEdit}
                   onDelete={setPendingDelete}
                   onAlbum={openAlbum}
+                  onArtist={openArtist}
                 />
               </>
             )}
@@ -626,6 +658,7 @@ export default function App(): JSX.Element {
                   onEdit={openEdit}
                   onDelete={setPendingDelete}
                   onAlbum={openAlbum}
+                  onArtist={openArtist}
                 />
               </>
             )}
@@ -640,7 +673,11 @@ export default function App(): JSX.Element {
                     <div className="label">Album</div>
                     <h1>{view.album}</h1>
                     <p className="row-sub">
-                      {view.artist} · {albumTracks.length} {albumTracks.length === 1 ? 'song' : 'songs'}
+                      <button className="album-link" onClick={() => goTo({ kind: 'artist', artist: view.artist })}>
+                        {view.artist}
+                      </button>
+                      {' · '}
+                      {albumTracks.length} {albumTracks.length === 1 ? 'song' : 'songs'}
                     </p>
                     {albumTracks.length > 0 && (
                       <button
@@ -663,6 +700,45 @@ export default function App(): JSX.Element {
                   onEdit={openEdit}
                   onDelete={setPendingDelete}
                   onAlbum={openAlbum}
+                  onArtist={openArtist}
+                />
+              </>
+            )}
+
+            {view.kind === 'artist' && (
+              <>
+                <div className="playlist-hero">
+                  <div className="cover-lg">
+                    {coverUrl(artistCover) ? <img src={coverUrl(artistCover)} alt="" /> : <Icons.Note />}
+                  </div>
+                  <div>
+                    <div className="label">Artist</div>
+                    <h1>{view.artist}</h1>
+                    <p className="row-sub">
+                      {artistTracks.length} {artistTracks.length === 1 ? 'song' : 'songs'}
+                    </p>
+                    {artistTracks.length > 0 && (
+                      <button
+                        className="primary"
+                        style={{ marginTop: 16 }}
+                        onClick={() => playList(artistTracks, 0)}
+                      >
+                        Play
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <TrackTable
+                  tracks={artistTracks}
+                  currentId={current?.id}
+                  likedSet={likedSet}
+                  playList={playList}
+                  onLike={(id) => void window.shockwave.toggleLike(id)}
+                  onMenu={openMenu}
+                  onEdit={openEdit}
+                  onDelete={setPendingDelete}
+                  onAlbum={openAlbum}
+                  onArtist={openArtist}
                 />
               </>
             )}
@@ -677,7 +753,13 @@ export default function App(): JSX.Element {
           </div>
           <div>
             <strong>{current?.title ?? 'Nothing playing'}</strong>
-            <span>{current?.artist ?? 'Choose a track from your repository'}</span>
+            {current && !isUnknownArtist(current.artist) ? (
+              <button className="album-link" onClick={() => openArtist(current)}>
+                {current.artist}
+              </button>
+            ) : (
+              <span>{current?.artist ?? 'Choose a track from your repository'}</span>
+            )}
             {current && !isUnknownAlbum(current.album) && (
               <button className="album-link" onClick={() => openAlbum(current)}>
                 {current.album}
@@ -966,7 +1048,8 @@ function TrackTable({
   onMenu,
   onEdit,
   onDelete,
-  onAlbum
+  onAlbum,
+  onArtist
 }: {
   tracks: Track[]
   currentId?: string
@@ -977,6 +1060,7 @@ function TrackTable({
   onEdit: (track: Track) => void
   onDelete: (track: Track) => void
   onAlbum: (track: Track) => void
+  onArtist: (track: Track) => void
 }): JSX.Element {
   if (tracks.length === 0) {
     return <p className="empty">Nothing here yet.</p>
@@ -1013,7 +1097,20 @@ function TrackTable({
                 </div>
                 <div>
                   <div className="row-title">{track.title}</div>
-                  <div className="row-sub">{track.artist}</div>
+                  {isUnknownArtist(track.artist) ? (
+                    <div className="row-sub">{track.artist}</div>
+                  ) : (
+                    <button
+                      className="album-link"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        onArtist(track)
+                      }}
+                      onDoubleClick={(event) => event.stopPropagation()}
+                    >
+                      {track.artist}
+                    </button>
+                  )}
                 </div>
               </div>
             </td>
