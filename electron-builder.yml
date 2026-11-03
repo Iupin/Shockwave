@@ -1,0 +1,32 @@
+appId: com.shockwave.audio
+productName: Shockwave
+copyright: Copyright © Matthew
+asar: true
+directories:
+  output: release
+  buildResources: build
+files:
+  - out
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: ${productName}-Setup-${version}.${ext}
+  # Unsigned local/generic updates should still be installable later.
+  verifyUpdateCodeSignature: false
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  differentialPackage: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: Shockwave
+  uninstallDisplayName: Shockwave
+  artifactName: ${productName}-Setup-${version}.${ext}
+publish:
+  provider: generic
+  url: https://example.com/shockwave-updates
+  channel: latest
+  publishAutoUpdate: true
