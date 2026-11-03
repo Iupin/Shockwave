@@ -1,7 +1,6 @@
-import { app, BrowserWindow, dialog, ipcMain, net, protocol, session, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, protocol, session, shell } from 'electron'
 import { existsSync, readdirSync } from 'fs'
 import { join } from 'path'
-import { pathToFileURL } from 'url'
 import { AppSettings, AppState, SearchResults } from '../shared/types'
 import { dismissChangelog, pendingChangelog, rememberCurrentVersion } from './changelog'
 import { readUserConfig, writeUserConfig } from './config'
@@ -16,6 +15,7 @@ import {
   toggleLiked
 } from './playlists'
 import { RepositoryLayout, ensureRepository, loadSettings, saveSettings } from './repository'
+import { fileResponse } from './media'
 import { checkForUpdates, configureUpdater, getUpdateStatus, installUpdate } from './updater'
 
 function appIcon(): string {
@@ -132,13 +132,13 @@ function registerProtocol(): void {
         if (!track) return new Response('Not found', { status: 404 })
         const file = resolveTrackPath(current, track)
         if (!existsSync(file)) return new Response('Not found', { status: 404 })
-        return net.fetch(pathToFileURL(file).toString())
+        return fileResponse(file, request)
       }
       if (kind === 'cover') {
         const covers = readdirSync(current.covers)
         const match = covers.find((name) => name.startsWith(id))
         if (!match) return new Response('Not found', { status: 404 })
-        return net.fetch(pathToFileURL(join(current.covers, match)).toString())
+        return fileResponse(join(current.covers, match), request)
       }
       return new Response('Not found', { status: 404 })
     } catch {

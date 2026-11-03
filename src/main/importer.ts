@@ -5,7 +5,7 @@ import { get } from 'https'
 import { basename, extname, join } from 'path'
 import { AUDIO_EXTENSIONS, ImportProgress, Track } from '../shared/types'
 import { attachCover, ingestFile, scanLibrary, updateTrack } from './library'
-import { downloadArtwork, enrichFromItunes, identityFromVideo, type YtDlpInfo } from './metadata'
+import { downloadArtwork, enrichSong, identityFromVideo, type YtDlpInfo } from './metadata'
 import { RepositoryLayout } from './repository'
 
 const YT_DLP_URL =
@@ -237,7 +237,7 @@ export async function importFromUrl(
   onProgress({ stage: 'tag', message: 'Looking up official song info…' })
   const info = audioPath ? readInfoJson(layout.music, audioPath) : {}
   let identity = identityFromVideo(info)
-  identity = await enrichFromItunes(identity)
+  identity = await enrichSong(identity)
 
   if (audioPath) {
     const relPath = basename(audioPath)

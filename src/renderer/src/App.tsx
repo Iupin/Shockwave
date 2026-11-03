@@ -60,6 +60,7 @@ export default function App(): JSX.Element {
   const queueRef = useRef<Track[]>([])
   const queueIndexRef = useRef(0)
   const settingsRef = useRef(state.settings)
+  const seekingRef = useRef(false)
 
   const current = queue[queueIndex]
   queueRef.current = queue
@@ -118,6 +119,7 @@ export default function App(): JSX.Element {
 
   useEffect(() => {
     const audio = new Audio()
+    audio.preload = 'auto'
     audioRef.current = audio
     const onEnded = (): void => {
       const list = queueRef.current
@@ -145,10 +147,20 @@ export default function App(): JSX.Element {
       queueIndexRef.current = nextIndex
       setQueueIndex(nextIndex)
       audio.src = trackUrl(next)
+      setElapsed(0)
+      setDuration(next.duration || 0)
       void audio.play().then(() => setPlaying(true)).catch(() => setPlaying(false))
     }
-    audio.addEventListener('timeupdate', () => setElapsed(audio.currentTime))
-    audio.addEventListener('durationchange', () => setDuration(audio.duration || 0))
+    const syncDuration = (): void => {
+      if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        setDuration(audio.duration)
+      }
+    }
+    audio.addEventListener('timeupdate', () => {
+      if (!seekingRef.current) setElapsed(audio.currentTime)
+    })
+    audio.addEventListener('durationchange', syncDuration)
+    audio.addEventListener('loadedmetadata', syncDuration)
     audio.addEventListener('ended', onEnded)
     return () => {
       audio.removeEventListener('ended', onEnded)
@@ -171,6 +183,8 @@ export default function App(): JSX.Element {
     setQueue(tracks)
     setQueueIndex(index)
     audio.src = trackUrl(tracks[index])
+    setElapsed(0)
+    setDuration(tracks[index].duration || 0)
     void audio.play().then(() => setPlaying(true)).catch(() => setPlaying(false))
   }
 
@@ -240,6 +254,8 @@ export default function App(): JSX.Element {
     queueIndexRef.current = nextIndex
     setQueueIndex(nextIndex)
     audio.src = trackUrl(next)
+    setElapsed(0)
+    setDuration(next.duration || 0)
     void audio.play().then(() => setPlaying(true)).catch(() => setPlaying(false))
   }
 
@@ -601,16 +617,27 @@ export default function App(): JSX.Element {
             <input
               type="range"
               min={0}
-              max={duration || 0}
+              max={Number.isFinite(duration) && duration > 0 ? duration : current?.duration || 0}
               step={0.1}
               value={elapsed}
+              onPointerDown={() => {
+                seekingRef.current = true
+              }}
+              onPointerUp={() => {
+                seekingRef.current = false
+              }}
               onChange={(event) => {
                 const value = Number(event.target.value)
-                if (audioRef.current) audioRef.current.currentTime = value
                 setElapsed(value)
+                const audio = audioRef.current
+                if (audio && Number.isFinite(value)) {
+                  audio.currentTime = value
+                }
               }}
             />
-            <span className="time">{formatTime(duration)}</span>
+            <span className="time">
+              {formatTime(Number.isFinite(duration) && duration > 0 ? duration : current?.duration || 0)}
+            </span>
           </div>
         </div>
         <div className="volume-wrap">
