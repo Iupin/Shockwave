@@ -77,7 +77,7 @@ const JUNK =
 
 const MB_HEADERS = {
   Accept: 'application/json',
-  'User-Agent': 'Shockwave/1.2.0 (https://github.com/Iupin/Shockwave)'
+  'User-Agent': 'Shockwave/1.3.0 (https://github.com/Iupin/Shockwave)'
 }
 
 function normalize(value: string): string {

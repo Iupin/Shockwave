@@ -371,6 +371,24 @@ button {
   margin-top: 4px;
 }
 
+.album-link {
+  color: var(--muted);
+  font: inherit;
+  text-align: left;
+  padding: 0;
+}
+
+.album-link:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.now .album-link {
+  display: block;
+  font-size: 13px;
+  margin-top: 2px;
+}
+
 .section-title {
   font-size: 22px;
   margin: 8px 0 16px;

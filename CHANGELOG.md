@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.3.0
+
+Open an album from a song.
+
+### Added
+
+- Album names are clickable when they are set. That opens an album page with every song that shares the same album name and artist.
+- The now-playing bar also links to the current album.
+- Play all from the album page.
+
+### Installer
+
+- `Shockwave-Setup-1.3.0.exe`
+- `Shockwave-Setup-1.3.0.exe.blockmap`
+- `latest.yml`
+
 ## 1.2.0
 
 Edit songs, tile menus, and calmer updates.

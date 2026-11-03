@@ -9,13 +9,14 @@ type View =
   | { kind: 'search' }
   | { kind: 'library' }
   | { kind: 'playlist'; id: string }
+  | { kind: 'album'; artist: string; album: string }
 
 const emptyState: AppState = {
   repositoryPath: null,
   tracks: [],
   playlists: [],
   settings: { volume: 0.8, repeat: 'off', shuffle: false },
-  appVersion: '1.2.0'
+  appVersion: '1.3.0'
 }
 
 function formatTime(seconds: number): string {
@@ -32,6 +33,20 @@ function coverUrl(track?: Track): string | undefined {
 
 function trackUrl(track: Track): string {
   return `shockwave://track/${track.id}`
+}
+
+function isUnknownAlbum(album: string): boolean {
+  const value = album.trim().toLowerCase()
+  return !value || value === 'unknown album'
+}
+
+function tracksForAlbum(tracks: Track[], artist: string, album: string): Track[] {
+  const artistKey = artist.trim().toLowerCase()
+  const albumKey = album.trim().toLowerCase()
+  return tracks.filter(
+    (track) =>
+      track.artist.trim().toLowerCase() === artistKey && track.album.trim().toLowerCase() === albumKey
+  )
 }
 
 export default function App(): JSX.Element {
@@ -91,6 +106,11 @@ export default function App(): JSX.Element {
     setEditYear(track.year ? String(track.year) : '')
     setEditGenre(track.genre ?? '')
     setMenu(null)
+  }
+
+  const openAlbum = (track: Track): void => {
+    if (isUnknownAlbum(track.album)) return
+    goTo({ kind: 'album', artist: track.artist, album: track.album })
   }
 
   const liked = state.playlists.find((p) => p.id === 'liked')
@@ -365,6 +385,10 @@ export default function App(): JSX.Element {
         .filter((track): track is Track => Boolean(track))
     : []
 
+  const albumTracks =
+    view.kind === 'album' ? tracksForAlbum(state.tracks, view.artist, view.album) : []
+  const albumCover = albumTracks.find((track) => track.coverId) ?? albumTracks[0]
+
   const homeRecent = state.tracks.slice(0, 12)
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
@@ -546,6 +570,7 @@ export default function App(): JSX.Element {
                   onMenu={openMenu}
                   onEdit={openEdit}
                   onDelete={setPendingDelete}
+                  onAlbum={openAlbum}
                 />
               </>
             )}
@@ -562,6 +587,7 @@ export default function App(): JSX.Element {
                   onMenu={openMenu}
                   onEdit={openEdit}
                   onDelete={setPendingDelete}
+                  onAlbum={openAlbum}
                 />
               </>
             )}
@@ -599,6 +625,44 @@ export default function App(): JSX.Element {
                   onMenu={openMenu}
                   onEdit={openEdit}
                   onDelete={setPendingDelete}
+                  onAlbum={openAlbum}
+                />
+              </>
+            )}
+
+            {view.kind === 'album' && (
+              <>
+                <div className="playlist-hero">
+                  <div className="cover-lg">
+                    {coverUrl(albumCover) ? <img src={coverUrl(albumCover)} alt="" /> : <Icons.Note />}
+                  </div>
+                  <div>
+                    <div className="label">Album</div>
+                    <h1>{view.album}</h1>
+                    <p className="row-sub">
+                      {view.artist} · {albumTracks.length} {albumTracks.length === 1 ? 'song' : 'songs'}
+                    </p>
+                    {albumTracks.length > 0 && (
+                      <button
+                        className="primary"
+                        style={{ marginTop: 16 }}
+                        onClick={() => playList(albumTracks, 0)}
+                      >
+                        Play
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <TrackTable
+                  tracks={albumTracks}
+                  currentId={current?.id}
+                  likedSet={likedSet}
+                  playList={playList}
+                  onLike={(id) => void window.shockwave.toggleLike(id)}
+                  onMenu={openMenu}
+                  onEdit={openEdit}
+                  onDelete={setPendingDelete}
+                  onAlbum={openAlbum}
                 />
               </>
             )}
@@ -614,6 +678,11 @@ export default function App(): JSX.Element {
           <div>
             <strong>{current?.title ?? 'Nothing playing'}</strong>
             <span>{current?.artist ?? 'Choose a track from your repository'}</span>
+            {current && !isUnknownAlbum(current.album) && (
+              <button className="album-link" onClick={() => openAlbum(current)}>
+                {current.album}
+              </button>
+            )}
           </div>
           {current && (
             <button
@@ -896,7 +965,8 @@ function TrackTable({
   onLike,
   onMenu,
   onEdit,
-  onDelete
+  onDelete,
+  onAlbum
 }: {
   tracks: Track[]
   currentId?: string
@@ -906,6 +976,7 @@ function TrackTable({
   onMenu: (event: MouseEvent, trackId: string) => void
   onEdit: (track: Track) => void
   onDelete: (track: Track) => void
+  onAlbum: (track: Track) => void
 }): JSX.Element {
   if (tracks.length === 0) {
     return <p className="empty">Nothing here yet.</p>
@@ -946,7 +1017,22 @@ function TrackTable({
                 </div>
               </div>
             </td>
-            <td className="row-sub">{track.album}</td>
+            <td>
+              {isUnknownAlbum(track.album) ? (
+                <span className="row-sub">{track.album}</span>
+              ) : (
+                <button
+                  className="album-link"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onAlbum(track)
+                  }}
+                  onDoubleClick={(event) => event.stopPropagation()}
+                >
+                  {track.album}
+                </button>
+              )}
+            </td>
             <td>
               <div className="row-actions">
                 <button className={`heart ${likedSet.has(track.id) ? 'liked' : ''}`} onClick={() => onLike(track.id)}>
