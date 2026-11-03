@@ -15,7 +15,7 @@ const emptyState: AppState = {
   tracks: [],
   playlists: [],
   settings: { volume: 0.8, repeat: 'off', shuffle: false },
-  appVersion: '1.1.0'
+  appVersion: '1.1.1'
 }
 
 function formatTime(seconds: number): string {

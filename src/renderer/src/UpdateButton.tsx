@@ -4,7 +4,7 @@ import { LogoMark } from './LogoMark'
 
 const idleStatus: UpdateStatus = {
   phase: 'idle',
-  currentVersion: '1.1.0'
+  currentVersion: '1.1.1'
 }
 
 function fillFor(status: UpdateStatus): number {
