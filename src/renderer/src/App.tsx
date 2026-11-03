@@ -17,7 +17,8 @@ const emptyState: AppState = {
   tracks: [],
   playlists: [],
   settings: { volume: 0.8, repeat: 'off', shuffle: false },
-  appVersion: '1.4.0'
+  appVersion: '1.5.0',
+  discordRichPresence: true
 }
 
 function formatTime(seconds: number): string {
@@ -76,6 +77,7 @@ export default function App(): JSX.Element {
   const [importProgress, setImportProgress] = useState<ImportProgress | null>(null)
   const [menu, setMenu] = useState<{ x: number; y: number; trackId: string } | null>(null)
   const [pendingDelete, setPendingDelete] = useState<Track | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [pendingEdit, setPendingEdit] = useState<Track | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editArtist, setEditArtist] = useState('')
@@ -93,11 +95,13 @@ export default function App(): JSX.Element {
   const queueIndexRef = useRef(0)
   const settingsRef = useRef(state.settings)
   const seekingRef = useRef(false)
+  const playingRef = useRef(false)
 
   const current = queue[queueIndex]
   queueRef.current = queue
   queueIndexRef.current = queueIndex
   settingsRef.current = state.settings
+  playingRef.current = playing
 
   const openMenu = (event: MouseEvent, trackId: string): void => {
     event.preventDefault()
@@ -245,6 +249,35 @@ export default function App(): JSX.Element {
     audio.volume = state.settings.volume
   }, [state.settings.volume])
 
+  const syncPresence = (): void => {
+    const track = queueRef.current[queueIndexRef.current]
+    const audio = audioRef.current
+    if (!track) {
+      void window.shockwave.setPresence(null)
+      return
+    }
+    const length =
+      audio && Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : track.duration
+    void window.shockwave.setPresence({
+      title: track.title,
+      artist: track.artist,
+      album: track.album,
+      playing: playingRef.current,
+      elapsed: audio?.currentTime ?? 0,
+      duration: length || 0
+    })
+  }
+
+  useEffect(() => {
+    syncPresence()
+  }, [current?.id, current?.title, current?.artist, playing])
+
+  useEffect(() => {
+    if (!playing) return
+    const timer = window.setInterval(syncPresence, 15000)
+    return () => window.clearInterval(timer)
+  }, [playing, current?.id])
+
   const playList = (tracks: Track[], index: number): void => {
     const audio = audioRef.current
     if (!audio || !tracks[index]) return
@@ -388,7 +421,19 @@ export default function App(): JSX.Element {
           <button className="primary" onClick={() => void window.shockwave.chooseRepository().then(setState)}>
             Choose repository
           </button>
+          <button className="ghost" style={{ marginLeft: 8 }} onClick={() => setSettingsOpen(true)}>
+            Settings
+          </button>
         </div>
+        <SettingsModal
+          open={settingsOpen}
+          enabled={state.discordRichPresence}
+          onClose={() => setSettingsOpen(false)}
+          onToggle={async (value) => {
+            await window.shockwave.setDiscordEnabled(value)
+            setState((prev) => ({ ...prev, discordRichPresence: value }))
+          }}
+        />
       </div>
     )
   }
@@ -497,6 +542,9 @@ export default function App(): JSX.Element {
                 Import URL
               </button>
             </div>
+            <button className="round" title="Settings" onClick={() => setSettingsOpen(true)}>
+              <Icons.Gear />
+            </button>
             <UpdateButton version={state.appVersion} />
             <button className="repo-chip" onClick={() => void window.shockwave.openRepository()}>
               {state.repositoryPath}
@@ -818,6 +866,7 @@ export default function App(): JSX.Element {
               }}
               onPointerUp={() => {
                 seekingRef.current = false
+                syncPresence()
               }}
               onChange={(event) => {
                 const value = Number(event.target.value)
@@ -1035,6 +1084,58 @@ export default function App(): JSX.Element {
           </div>
         </div>
       )}
+
+      <SettingsModal
+        open={settingsOpen}
+        enabled={state.discordRichPresence}
+        onClose={() => setSettingsOpen(false)}
+        onToggle={async (value) => {
+          await window.shockwave.setDiscordEnabled(value)
+          setState((prev) => ({ ...prev, discordRichPresence: value }))
+        }}
+      />
+    </div>
+  )
+}
+
+function SettingsModal({
+  open,
+  enabled,
+  onClose,
+  onToggle
+}: {
+  open: boolean
+  enabled: boolean
+  onClose: () => void
+  onToggle: (value: boolean) => void | Promise<void>
+}): JSX.Element | null {
+  if (!open) return null
+  return (
+    <div className="modal-back" onClick={onClose}>
+      <div className="modal" onClick={(event) => event.stopPropagation()}>
+        <h2>Settings</h2>
+        <div className="setting-row">
+          <div>
+            <strong>Discord Rich Presence</strong>
+            <p className="row-sub">
+              Show Shockwave on Discord, including the song you are playing and a duration bar.
+            </p>
+          </div>
+          <button
+            className={`toggle${enabled ? ' on' : ''}`}
+            role="switch"
+            aria-checked={enabled}
+            onClick={() => void onToggle(!enabled)}
+          >
+            <span className="toggle-knob" />
+          </button>
+        </div>
+        <div className="modal-actions">
+          <button className="primary" onClick={onClose}>
+            Done
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

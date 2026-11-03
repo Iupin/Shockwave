@@ -1,9 +1,10 @@
 import { app, BrowserWindow, dialog, ipcMain, protocol, session, shell } from 'electron'
 import { existsSync, readdirSync } from 'fs'
 import { join } from 'path'
-import { AppSettings, AppState, SearchResults, TrackEdit } from '../shared/types'
+import { AppSettings, AppState, PresencePayload, SearchResults, TrackEdit } from '../shared/types'
 import { dismissChangelog, pendingChangelog, rememberCurrentVersion } from './changelog'
 import { readUserConfig, writeUserConfig } from './config'
+import { setDiscordEnabled, setPresence, startDiscord, stopDiscord } from './discord'
 import { importFromUrl, importLocalFiles } from './importer'
 import { deleteTrack, editTrack, findTrack, loadLibrary, resolveTrackPath, scanLibrary } from './library'
 import {
@@ -61,7 +62,8 @@ async function buildState(): Promise<AppState> {
       tracks: [],
       playlists: [],
       settings: loadSettingsFallback(),
-      appVersion: app.getVersion()
+      appVersion: app.getVersion(),
+      discordRichPresence: config.discordRichPresence
     }
   }
   layout = ensureRepository(config.repositoryPath)
@@ -71,7 +73,8 @@ async function buildState(): Promise<AppState> {
     tracks,
     playlists: loadPlaylists(layout),
     settings: loadSettings(layout),
-    appVersion: app.getVersion()
+    appVersion: app.getVersion(),
+    discordRichPresence: config.discordRichPresence
   }
 }
 
@@ -168,11 +171,16 @@ app.whenReady().then(async () => {
     await scanLibrary(layout)
   }
   createWindow()
+  void startDiscord()
   void checkForUpdates(false)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+})
+
+app.on('before-quit', () => {
+  stopDiscord()
 })
 
 app.on('window-all-closed', () => {
@@ -285,3 +293,8 @@ ipcMain.handle('download-update', () => downloadUpdate())
 ipcMain.handle('install-update', () => installUpdate())
 ipcMain.handle('pending-changelog', () => pendingChangelog())
 ipcMain.handle('dismiss-changelog', () => dismissChangelog())
+ipcMain.handle('set-presence', (_event, payload: PresencePayload | null) => setPresence(payload))
+ipcMain.handle('set-discord-enabled', async (_event, value: boolean) => {
+  await setDiscordEnabled(value)
+  await refreshRenderer()
+})

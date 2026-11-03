@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.5.0
+
+Discord Rich Presence while Shockwave is open.
+
+### Added
+
+- Shockwave shows on Discord while the app is running. When a song is playing, Discord shows the title, artist, and a duration bar.
+- Rich Presence is on by default. Turn it off from Settings (gear in the top bar, or Settings on the first-run screen).
+- Discord art uses the `logo` Rich Presence asset. Upload the Shockwave logo in the Discord Developer Portal under Rich Presence art assets, named `logo`.
+
+### Installer
+
+- `Shockwave-Setup-1.5.0.exe`
+- `Shockwave-Setup-1.5.0.exe.blockmap`
+- `latest.yml`
+
 ## 1.4.0
 
 Open an artist from a song.

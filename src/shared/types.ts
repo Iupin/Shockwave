@@ -55,6 +55,16 @@ export interface AppState {
   playlists: Playlist[]
   settings: AppSettings
   appVersion: string
+  discordRichPresence: boolean
+}
+
+export interface PresencePayload {
+  title: string
+  artist: string
+  album?: string
+  playing: boolean
+  elapsed: number
+  duration: number
 }
 
 export type UpdatePhase =

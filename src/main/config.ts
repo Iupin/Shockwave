@@ -5,11 +5,13 @@ import { join } from 'path'
 export interface UserConfig {
   repositoryPath: string | null
   lastSeenVersion: string | null
+  discordRichPresence: boolean
 }
 
 const DEFAULT_CONFIG: UserConfig = {
   repositoryPath: null,
-  lastSeenVersion: null
+  lastSeenVersion: null,
+  discordRichPresence: true
 }
 
 function configPath(): string {
@@ -25,7 +27,8 @@ export function readUserConfig(): UserConfig {
     const parsed = JSON.parse(readFileSync(file, 'utf8')) as Partial<UserConfig>
     return {
       repositoryPath: typeof parsed.repositoryPath === 'string' ? parsed.repositoryPath : null,
-      lastSeenVersion: typeof parsed.lastSeenVersion === 'string' ? parsed.lastSeenVersion : null
+      lastSeenVersion: typeof parsed.lastSeenVersion === 'string' ? parsed.lastSeenVersion : null,
+      discordRichPresence: parsed.discordRichPresence !== false
     }
   } catch {
     return { ...DEFAULT_CONFIG }

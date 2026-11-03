@@ -1,6 +1,6 @@
 {
   "name": "shockwave",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Local audio manager with a Spotify-like interface",
   "main": "./out/main/index.js",
   "author": "Matthew",
@@ -15,10 +15,12 @@
     "icon": "node scripts/generate-icon.mjs"
   },
   "dependencies": {
+    "discord-rpc": "^4.0.1",
     "electron-updater": "^6.8.11",
     "music-metadata": "^11.9.0"
   },
   "devDependencies": {
+    "@types/discord-rpc": "^4.0.11",
     "@types/node": "^22.10.2",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",

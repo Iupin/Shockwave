@@ -6,6 +6,7 @@ import type {
   ImportProgress,
   ImportResult,
   SearchResults,
+  PresencePayload,
   TrackEdit,
   UpdateStatus
 } from '../shared/types'
@@ -34,6 +35,8 @@ const api = {
   installUpdate: (): Promise<void> => ipcRenderer.invoke('install-update'),
   pendingChangelog: (): Promise<ChangelogPayload | null> => ipcRenderer.invoke('pending-changelog'),
   dismissChangelog: (): Promise<void> => ipcRenderer.invoke('dismiss-changelog'),
+  setPresence: (payload: PresencePayload | null) => ipcRenderer.invoke('set-presence', payload),
+  setDiscordEnabled: (enabled: boolean) => ipcRenderer.invoke('set-discord-enabled', enabled),
   onUpdateStatus: (callback: (status: UpdateStatus) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, status: UpdateStatus): void => callback(status)
     ipcRenderer.on('update-status', listener)
