@@ -1,11 +1,11 @@
 import { app, BrowserWindow, dialog, ipcMain, protocol, session, shell } from 'electron'
 import { existsSync, readdirSync } from 'fs'
 import { join } from 'path'
-import { AppSettings, AppState, SearchResults } from '../shared/types'
+import { AppSettings, AppState, SearchResults, TrackEdit } from '../shared/types'
 import { dismissChangelog, pendingChangelog, rememberCurrentVersion } from './changelog'
 import { readUserConfig, writeUserConfig } from './config'
 import { importFromUrl, importLocalFiles } from './importer'
-import { deleteTrack, findTrack, loadLibrary, resolveTrackPath, scanLibrary } from './library'
+import { deleteTrack, editTrack, findTrack, loadLibrary, resolveTrackPath, scanLibrary } from './library'
 import {
   addToPlaylist,
   createPlaylist,
@@ -16,7 +16,7 @@ import {
 } from './playlists'
 import { RepositoryLayout, ensureRepository, loadSettings, saveSettings } from './repository'
 import { fileResponse } from './media'
-import { checkForUpdates, configureUpdater, getUpdateStatus, installUpdate } from './updater'
+import { checkForUpdates, configureUpdater, downloadUpdate, getUpdateStatus, installUpdate } from './updater'
 
 function appIcon(): string {
   return app.isPackaged
@@ -168,6 +168,7 @@ app.whenReady().then(async () => {
     await scanLibrary(layout)
   }
   createWindow()
+  void checkForUpdates(false)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
@@ -269,12 +270,18 @@ ipcMain.handle('delete-track', async (_event, trackId: string) => {
   await refreshRenderer()
 })
 
+ipcMain.handle('edit-track', async (_event, trackId: string, edit: TrackEdit) => {
+  await editTrack(requireLayout(), trackId, edit)
+  await refreshRenderer()
+})
+
 ipcMain.handle('save-settings', async (_event, settings: AppSettings) => {
   saveSettings(requireLayout(), settings)
 })
 
 ipcMain.handle('get-update-status', () => getUpdateStatus())
-ipcMain.handle('check-for-updates', () => checkForUpdates())
+ipcMain.handle('check-for-updates', () => checkForUpdates(true))
+ipcMain.handle('download-update', () => downloadUpdate())
 ipcMain.handle('install-update', () => installUpdate())
 ipcMain.handle('pending-changelog', () => pendingChangelog())
 ipcMain.handle('dismiss-changelog', () => dismissChangelog())

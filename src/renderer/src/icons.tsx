@@ -100,5 +100,10 @@ export const Icons = {
     <Svg>
       <path d="M9 3h6l1 2h5v2H3V5h5zm1 6h2v8h-2zm4 0h2v8h-2zM6 8h12l-1 13H7z" />
     </Svg>
+  ),
+  Edit: () => (
+    <Svg>
+      <path d="M3 17.3V21h3.7L18.8 8.9l-3.7-3.7zM21.7 6.04c.4-.4.4-1 0-1.4l-2.34-2.34a1 1 0 0 0-1.4 0l-1.83 1.83 3.7 3.7z" />
+    </Svg>
   )
 }

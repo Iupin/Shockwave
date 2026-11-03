@@ -454,13 +454,19 @@ button {
   gap: 4px;
 }
 
-.row-delete {
+.row-delete,
+.row-edit {
   color: var(--muted);
   opacity: 0;
 }
 
-.row:hover .row-delete {
+.row:hover .row-delete,
+.row:hover .row-edit {
   opacity: 1;
+}
+
+.row-edit:hover {
+  color: var(--text);
 }
 
 .row-delete:hover {
@@ -686,6 +692,28 @@ button {
   outline: none;
 }
 
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.field input {
+  margin-bottom: 0;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -734,7 +762,7 @@ button {
 }
 
 .menu {
-  position: absolute;
+  position: fixed;
   background: #282828;
   border-radius: 4px;
   padding: 4px;

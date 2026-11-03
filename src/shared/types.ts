@@ -27,6 +27,14 @@ export interface Track {
   mtimeMs: number
 }
 
+export interface TrackEdit {
+  title: string
+  artist: string
+  album: string
+  year?: number
+  genre?: string
+}
+
 export interface Playlist {
   id: string
   name: string

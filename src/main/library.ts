@@ -1,9 +1,10 @@
+import { spawn } from 'child_process'
 import { createHash, randomUUID } from 'crypto'
 import { shell } from 'electron'
-import { copyFileSync, existsSync, readdirSync, statSync, writeFileSync } from 'fs'
+import { copyFileSync, existsSync, readdirSync, renameSync, statSync, unlinkSync, writeFileSync } from 'fs'
 import { extname, isAbsolute, join, relative } from 'path'
 import { parseFile } from 'music-metadata'
-import { AUDIO_EXTENSIONS, Track } from '../shared/types'
+import { AUDIO_EXTENSIONS, Track, TrackEdit } from '../shared/types'
 import { removeTrackFromAllPlaylists } from './playlists'
 import { RepositoryLayout, readJson, writeJson } from './repository'
 
@@ -144,6 +145,89 @@ export function attachCover(layout: RepositoryLayout, image: Buffer): string {
     writeFileSync(coverPath, image)
   }
   return coverId
+}
+
+export function updateTrackById(layout: RepositoryLayout, trackId: string, edit: TrackEdit): Track | undefined {
+  const tracks = loadLibrary(layout)
+  const index = tracks.findIndex((track) => track.id === trackId)
+  if (index < 0) return undefined
+  const year = edit.year && Number.isFinite(edit.year) ? edit.year : undefined
+  tracks[index] = {
+    ...tracks[index],
+    title: edit.title.trim() || tracks[index].title,
+    artist: edit.artist.trim() || tracks[index].artist,
+    album: edit.album.trim() || 'Unknown album',
+    year,
+    genre: edit.genre?.trim() || undefined
+  }
+  saveLibrary(layout, tracks)
+  return tracks[index]
+}
+
+function writeFileTags(filePath: string, edit: TrackEdit): Promise<void> {
+  return new Promise((resolve) => {
+    const outPath = `${filePath}.edited${extname(filePath)}`
+    const args = [
+      '-y',
+      '-i',
+      filePath,
+      '-map',
+      '0',
+      '-c',
+      'copy',
+      '-metadata',
+      `title=${edit.title}`,
+      '-metadata',
+      `artist=${edit.artist}`,
+      '-metadata',
+      `album=${edit.album}`,
+      '-metadata',
+      `date=${edit.year ?? ''}`,
+      '-metadata',
+      `genre=${edit.genre ?? ''}`,
+      outPath
+    ]
+    const child = spawn(process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg', args, { windowsHide: true })
+    child.on('error', () => resolve())
+    child.on('close', (code) => {
+      if (code === 0 && existsSync(outPath)) {
+        try {
+          unlinkSync(filePath)
+          renameSync(outPath, filePath)
+        } catch {
+          /* keep original */
+        }
+      } else if (existsSync(outPath)) {
+        try {
+          unlinkSync(outPath)
+        } catch {
+          /* ignore */
+        }
+      }
+      resolve()
+    })
+  })
+}
+
+export async function editTrack(layout: RepositoryLayout, trackId: string, edit: TrackEdit): Promise<Track | undefined> {
+  const updated = updateTrackById(layout, trackId, edit)
+  if (!updated) return undefined
+  const file = resolveTrackPath(layout, updated)
+  if (existsSync(file)) {
+    await writeFileTags(file, {
+      title: updated.title,
+      artist: updated.artist,
+      album: updated.album,
+      year: updated.year,
+      genre: updated.genre
+    })
+    if (existsSync(file)) {
+      const stats = statSync(file)
+      updateTrack(layout, updated.relPath, { size: stats.size, mtimeMs: stats.mtimeMs })
+      return { ...updated, size: stats.size, mtimeMs: stats.mtimeMs }
+    }
+  }
+  return updated
 }
 
 export function updateTrack(

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import type { AppState, ImportProgress, Playlist, RepeatMode, Track } from '../../shared/types'
 import { Changelog } from './Changelog'
 import { Icons } from './icons'
@@ -15,7 +15,7 @@ const emptyState: AppState = {
   tracks: [],
   playlists: [],
   settings: { volume: 0.8, repeat: 'off', shuffle: false },
-  appVersion: '1.1.1'
+  appVersion: '1.2.0'
 }
 
 function formatTime(seconds: number): string {
@@ -50,6 +50,12 @@ export default function App(): JSX.Element {
   const [importProgress, setImportProgress] = useState<ImportProgress | null>(null)
   const [menu, setMenu] = useState<{ x: number; y: number; trackId: string } | null>(null)
   const [pendingDelete, setPendingDelete] = useState<Track | null>(null)
+  const [pendingEdit, setPendingEdit] = useState<Track | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editArtist, setEditArtist] = useState('')
+  const [editAlbum, setEditAlbum] = useState('')
+  const [editYear, setEditYear] = useState('')
+  const [editGenre, setEditGenre] = useState('')
 
   const [queue, setQueue] = useState<Track[]>([])
   const [queueIndex, setQueueIndex] = useState(0)
@@ -66,6 +72,26 @@ export default function App(): JSX.Element {
   queueRef.current = queue
   queueIndexRef.current = queueIndex
   settingsRef.current = state.settings
+
+  const openMenu = (event: MouseEvent, trackId: string): void => {
+    event.preventDefault()
+    event.stopPropagation()
+    const pad = 8
+    const width = 220
+    const x = Math.min(event.clientX, window.innerWidth - width - pad)
+    const y = Math.min(event.clientY, window.innerHeight - 280)
+    setMenu({ x: Math.max(pad, x), y: Math.max(pad, y), trackId })
+  }
+
+  const openEdit = (track: Track): void => {
+    setPendingEdit(track)
+    setEditTitle(track.title)
+    setEditArtist(track.artist)
+    setEditAlbum(track.album === 'Unknown album' ? '' : track.album)
+    setEditYear(track.year ? String(track.year) : '')
+    setEditGenre(track.genre ?? '')
+    setMenu(null)
+  }
 
   const liked = state.playlists.find((p) => p.id === 'liked')
   const likedSet = useMemo(() => new Set(liked?.trackIds ?? []), [liked])
@@ -95,6 +121,14 @@ export default function App(): JSX.Element {
     setHistoryIndex(index)
     setView(history[index])
   }
+
+  useEffect(() => {
+    setQueue((prev) => {
+      if (prev.length === 0) return prev
+      const next = prev.map((track) => state.tracks.find((item) => item.id === track.id) ?? track)
+      return next.every((track, index) => track === prev[index]) ? prev : next
+    })
+  }, [state.tracks])
 
   useEffect(() => {
     void window.shockwave.getState().then(setState)
@@ -441,7 +475,12 @@ export default function App(): JSX.Element {
                 ) : (
                   <div className="grid">
                     {homeRecent.map((track, index) => (
-                      <button key={track.id} className="card" onClick={() => playList(state.tracks, index)}>
+                      <button
+                        key={track.id}
+                        className="card"
+                        onClick={() => playList(state.tracks, index)}
+                        onContextMenu={(event) => openMenu(event, track.id)}
+                      >
                         <div className="cover-lg">
                           {coverUrl(track) ? <img src={coverUrl(track)} alt="" /> : <Icons.Note />}
                           <span className="play-fab">
@@ -504,7 +543,8 @@ export default function App(): JSX.Element {
                   likedSet={likedSet}
                   playList={playList}
                   onLike={(id) => void window.shockwave.toggleLike(id)}
-                  onMenu={setMenu}
+                  onMenu={openMenu}
+                  onEdit={openEdit}
                   onDelete={setPendingDelete}
                 />
               </>
@@ -519,7 +559,8 @@ export default function App(): JSX.Element {
                   likedSet={likedSet}
                   playList={playList}
                   onLike={(id) => void window.shockwave.toggleLike(id)}
-                  onMenu={setMenu}
+                  onMenu={openMenu}
+                  onEdit={openEdit}
                   onDelete={setPendingDelete}
                 />
               </>
@@ -555,7 +596,8 @@ export default function App(): JSX.Element {
                   likedSet={likedSet}
                   playList={playList}
                   onLike={(id) => void window.shockwave.toggleLike(id)}
-                  onMenu={setMenu}
+                  onMenu={openMenu}
+                  onEdit={openEdit}
                   onDelete={setPendingDelete}
                 />
               </>
@@ -732,6 +774,14 @@ export default function App(): JSX.Element {
 
       {menu && (
         <div className="menu" style={{ left: menu.x, top: menu.y }}>
+          <button
+            onClick={() => {
+              const track = state.tracks.find((item) => item.id === menu.trackId)
+              if (track) openEdit(track)
+            }}
+          >
+            Edit details
+          </button>
           {state.playlists.map((playlist) => (
             <button
               key={playlist.id}
@@ -753,6 +803,57 @@ export default function App(): JSX.Element {
           >
             Delete song
           </button>
+        </div>
+      )}
+
+      {pendingEdit && (
+        <div className="modal-back" onClick={() => setPendingEdit(null)}>
+          <div className="modal" onClick={(event) => event.stopPropagation()}>
+            <h2>Edit song</h2>
+            <label className="field">
+              Title
+              <input value={editTitle} onChange={(event) => setEditTitle(event.target.value)} />
+            </label>
+            <label className="field">
+              Artist
+              <input value={editArtist} onChange={(event) => setEditArtist(event.target.value)} />
+            </label>
+            <label className="field">
+              Album
+              <input value={editAlbum} onChange={(event) => setEditAlbum(event.target.value)} />
+            </label>
+            <div className="field-row">
+              <label className="field">
+                Year
+                <input value={editYear} onChange={(event) => setEditYear(event.target.value)} />
+              </label>
+              <label className="field">
+                Genre
+                <input value={editGenre} onChange={(event) => setEditGenre(event.target.value)} />
+              </label>
+            </div>
+            <div className="modal-actions">
+              <button className="ghost" onClick={() => setPendingEdit(null)}>
+                Cancel
+              </button>
+              <button
+                className="primary"
+                onClick={async () => {
+                  const year = Number(editYear)
+                  await window.shockwave.editTrack(pendingEdit.id, {
+                    title: editTitle,
+                    artist: editArtist,
+                    album: editAlbum,
+                    year: editYear.trim() && Number.isFinite(year) ? year : undefined,
+                    genre: editGenre.trim() || undefined
+                  })
+                  setPendingEdit(null)
+                }}
+              >
+                Save
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -794,6 +895,7 @@ function TrackTable({
   playList,
   onLike,
   onMenu,
+  onEdit,
   onDelete
 }: {
   tracks: Track[]
@@ -801,7 +903,8 @@ function TrackTable({
   likedSet: Set<string>
   playList: (tracks: Track[], index: number) => void
   onLike: (id: string) => void
-  onMenu: (menu: { x: number; y: number; trackId: string }) => void
+  onMenu: (event: MouseEvent, trackId: string) => void
+  onEdit: (track: Track) => void
   onDelete: (track: Track) => void
 }): JSX.Element {
   if (tracks.length === 0) {
@@ -824,10 +927,7 @@ function TrackTable({
             key={track.id}
             className={`row ${currentId === track.id ? 'playing' : ''}`}
             onDoubleClick={() => playList(tracks, index)}
-            onContextMenu={(event) => {
-              event.preventDefault()
-              onMenu({ x: event.clientX, y: event.clientY, trackId: track.id })
-            }}
+            onContextMenu={(event) => onMenu(event, track.id)}
           >
             <td className="row-index">
               <span className="row-play" onClick={() => playList(tracks, index)}>
@@ -851,6 +951,16 @@ function TrackTable({
               <div className="row-actions">
                 <button className={`heart ${likedSet.has(track.id) ? 'liked' : ''}`} onClick={() => onLike(track.id)}>
                   <Icons.Heart filled={likedSet.has(track.id)} />
+                </button>
+                <button
+                  className="row-edit"
+                  title="Edit details"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onEdit(track)
+                  }}
+                >
+                  <Icons.Edit />
                 </button>
                 <button
                   className="row-delete"

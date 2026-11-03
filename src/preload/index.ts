@@ -6,6 +6,7 @@ import type {
   ImportProgress,
   ImportResult,
   SearchResults,
+  TrackEdit,
   UpdateStatus
 } from '../shared/types'
 
@@ -25,9 +26,11 @@ const api = {
   toggleLike: (trackId: string) => ipcRenderer.invoke('toggle-like', trackId),
   deletePlaylist: (playlistId: string) => ipcRenderer.invoke('delete-playlist', playlistId),
   deleteTrack: (trackId: string) => ipcRenderer.invoke('delete-track', trackId),
+  editTrack: (trackId: string, edit: TrackEdit) => ipcRenderer.invoke('edit-track', trackId, edit),
   saveSettings: (settings: AppSettings) => ipcRenderer.invoke('save-settings', settings),
   getUpdateStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke('get-update-status'),
   checkForUpdates: (): Promise<UpdateStatus> => ipcRenderer.invoke('check-for-updates'),
+  downloadUpdate: (): Promise<UpdateStatus> => ipcRenderer.invoke('download-update'),
   installUpdate: (): Promise<void> => ipcRenderer.invoke('install-update'),
   pendingChangelog: (): Promise<ChangelogPayload | null> => ipcRenderer.invoke('pending-changelog'),
   dismissChangelog: (): Promise<void> => ipcRenderer.invoke('dismiss-changelog'),

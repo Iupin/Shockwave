@@ -32,7 +32,7 @@ export function configureUpdater(onChange: (next: UpdateStatus) => void): void {
   emit = onChange
   status.currentVersion = app.getVersion()
 
-  autoUpdater.autoDownload = true
+  autoUpdater.autoDownload = false
   autoUpdater.autoInstallOnAppQuit = true
   autoUpdater.allowDowngrade = false
   autoUpdater.allowPrerelease = false
@@ -84,7 +84,29 @@ export function configureUpdater(onChange: (next: UpdateStatus) => void): void {
   })
 }
 
-export async function checkForUpdates(): Promise<UpdateStatus> {
+export async function checkForUpdates(userInitiated = false): Promise<UpdateStatus> {
+  if (!app.isPackaged) {
+    if (userInitiated) {
+      push({
+        phase: 'error',
+        message: 'Updates run from the installed app, using GitHub Releases.'
+      })
+    }
+    return getUpdateStatus()
+  }
+  try {
+    await autoUpdater.checkForUpdates()
+  } catch (error) {
+    push({
+      phase: 'error',
+      message: error instanceof Error ? error.message : String(error)
+    })
+  }
+  return getUpdateStatus()
+}
+
+export async function downloadUpdate(): Promise<UpdateStatus> {
+  if (status.phase === 'ready') return getUpdateStatus()
   if (!app.isPackaged) {
     push({
       phase: 'error',
@@ -93,7 +115,8 @@ export async function checkForUpdates(): Promise<UpdateStatus> {
     return getUpdateStatus()
   }
   try {
-    await autoUpdater.checkForUpdates()
+    push({ phase: 'downloading', percent: status.percent ?? 0, message: 'Downloading update…' })
+    await autoUpdater.downloadUpdate()
   } catch (error) {
     push({
       phase: 'error',

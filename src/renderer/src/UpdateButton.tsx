@@ -4,7 +4,7 @@ import { LogoMark } from './LogoMark'
 
 const idleStatus: UpdateStatus = {
   phase: 'idle',
-  currentVersion: '1.1.1'
+  currentVersion: '1.2.0'
 }
 
 function fillFor(status: UpdateStatus): number {
@@ -29,12 +29,6 @@ export function UpdateButton({ version }: { version: string }): JSX.Element {
     return window.shockwave.onUpdateStatus(setStatus)
   }, [])
 
-  useEffect(() => {
-    if (status.phase === 'available' || status.phase === 'downloading' || status.phase === 'ready') {
-      setOpen(true)
-    }
-  }, [status.phase])
-
   const hot = status.phase === 'available' || status.phase === 'downloading' || status.phase === 'ready'
   const fill = fillFor(status)
   const shownVersion = status.currentVersion || version
@@ -45,6 +39,11 @@ export function UpdateButton({ version }: { version: string }): JSX.Element {
       return
     }
     if (status.phase === 'checking') return
+    if (status.phase === 'available') {
+      setOpen(true)
+      void window.shockwave.downloadUpdate()
+      return
+    }
     setOpen(true)
   }
 
@@ -55,7 +54,11 @@ export function UpdateButton({ version }: { version: string }): JSX.Element {
         <button
           className={`update-btn${hot ? ' hot' : ''}`}
           onClick={onClick}
-          title={status.message || 'Check for updates'}
+          title={
+            hot
+              ? status.message || 'Download update'
+              : status.message || 'Check for updates'
+          }
         >
           <LogoMark
             size={22}
