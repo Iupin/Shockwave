@@ -8,7 +8,7 @@ export function fetchBuffer(
 ): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const get = url.startsWith('http://') ? httpGet : httpsGet
-    get(url, { headers: { 'User-Agent': 'Shockwave/1.0.0', ...extraHeaders } }, (response) => {
+    get(url, { headers: { 'User-Agent': 'Shockwave/1.1.0', ...extraHeaders } }, (response) => {
       const status = response.statusCode ?? 0
       if (status >= 300 && status < 400 && response.headers.location && redirects < 5) {
         fetchBuffer(response.headers.location, redirects + 1, extraHeaders).then(resolve, reject)

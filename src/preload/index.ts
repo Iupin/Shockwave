@@ -24,6 +24,7 @@ const api = {
     ipcRenderer.invoke('remove-from-playlist', playlistId, trackId),
   toggleLike: (trackId: string) => ipcRenderer.invoke('toggle-like', trackId),
   deletePlaylist: (playlistId: string) => ipcRenderer.invoke('delete-playlist', playlistId),
+  deleteTrack: (trackId: string) => ipcRenderer.invoke('delete-track', trackId),
   saveSettings: (settings: AppSettings) => ipcRenderer.invoke('save-settings', settings),
   getUpdateStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke('get-update-status'),
   checkForUpdates: (): Promise<UpdateStatus> => ipcRenderer.invoke('check-for-updates'),

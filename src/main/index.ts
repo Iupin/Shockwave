@@ -6,7 +6,7 @@ import { AppSettings, AppState, SearchResults } from '../shared/types'
 import { dismissChangelog, pendingChangelog, rememberCurrentVersion } from './changelog'
 import { readUserConfig, writeUserConfig } from './config'
 import { importFromUrl, importLocalFiles } from './importer'
-import { findTrack, loadLibrary, resolveTrackPath, scanLibrary } from './library'
+import { deleteTrack, findTrack, loadLibrary, resolveTrackPath, scanLibrary } from './library'
 import {
   addToPlaylist,
   createPlaylist,
@@ -261,6 +261,11 @@ ipcMain.handle('toggle-like', async (_event, trackId: string) => {
 
 ipcMain.handle('delete-playlist', async (_event, playlistId: string) => {
   deletePlaylist(requireLayout(), playlistId)
+  await refreshRenderer()
+})
+
+ipcMain.handle('delete-track', async (_event, trackId: string) => {
+  await deleteTrack(requireLayout(), trackId)
   await refreshRenderer()
 })
 

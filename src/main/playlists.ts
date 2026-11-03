@@ -82,6 +82,14 @@ export function toggleLiked(layout: RepositoryLayout, trackId: string): Playlist
   return liked
 }
 
+export function removeTrackFromAllPlaylists(layout: RepositoryLayout, trackId: string): void {
+  for (const playlist of loadPlaylists(layout)) {
+    if (!playlist.trackIds.includes(trackId)) continue
+    playlist.trackIds = playlist.trackIds.filter((id) => id !== trackId)
+    savePlaylist(layout, playlist)
+  }
+}
+
 export function deletePlaylist(layout: RepositoryLayout, playlistId: string): boolean {
   if (playlistId === 'liked') return false
   const file = playlistPath(layout, playlistId)

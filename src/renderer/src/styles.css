@@ -448,6 +448,43 @@ button {
   color: var(--heart);
 }
 
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.row-delete {
+  color: var(--muted);
+  opacity: 0;
+}
+
+.row:hover .row-delete {
+  opacity: 1;
+}
+
+.row-delete:hover {
+  color: var(--danger);
+}
+
+.danger {
+  border-radius: 500px;
+  font-weight: 700;
+  background: var(--danger);
+  color: #fff;
+  padding: 10px 16px;
+}
+
+.danger:hover {
+  filter: brightness(1.08);
+}
+
+.danger-item {
+  color: #f87171;
+  border-top: 1px solid #3e3e3e;
+  margin-top: 4px;
+}
+
 .player {
   height: var(--player);
   display: grid;

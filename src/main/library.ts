@@ -1,8 +1,10 @@
 import { createHash, randomUUID } from 'crypto'
+import { shell } from 'electron'
 import { copyFileSync, existsSync, readdirSync, statSync, writeFileSync } from 'fs'
 import { extname, isAbsolute, join, relative } from 'path'
 import { parseFile } from 'music-metadata'
 import { AUDIO_EXTENSIONS, Track } from '../shared/types'
+import { removeTrackFromAllPlaylists } from './playlists'
 import { RepositoryLayout, readJson, writeJson } from './repository'
 
 interface LibraryFile {
@@ -95,6 +97,39 @@ export async function ingestFile(layout: RepositoryLayout, sourcePath: string): 
 
 export function findTrack(layout: RepositoryLayout, id: string): Track | undefined {
   return loadLibrary(layout).find((track) => track.id === id)
+}
+
+export async function deleteTrack(layout: RepositoryLayout, trackId: string): Promise<Track | undefined> {
+  const tracks = loadLibrary(layout)
+  const track = tracks.find((item) => item.id === trackId)
+  if (!track) return undefined
+
+  const file = resolveTrackPath(layout, track)
+  if (existsSync(file)) {
+    await shell.trashItem(file)
+  }
+
+  saveLibrary(
+    layout,
+    tracks.filter((item) => item.id !== trackId)
+  )
+  removeTrackFromAllPlaylists(layout, trackId)
+
+  if (track.coverId) {
+    const stillUsed = loadLibrary(layout).some((item) => item.coverId === track.coverId)
+    if (!stillUsed) {
+      const match = readdirSync(layout.covers).find((name) => name.startsWith(track.coverId as string))
+      if (match) {
+        try {
+          await shell.trashItem(join(layout.covers, match))
+        } catch {
+          // Cover cleanup is best-effort.
+        }
+      }
+    }
+  }
+
+  return track
 }
 
 export function resolveTrackPath(layout: RepositoryLayout, track: Track): string {

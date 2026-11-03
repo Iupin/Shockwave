@@ -15,7 +15,7 @@ const emptyState: AppState = {
   tracks: [],
   playlists: [],
   settings: { volume: 0.8, repeat: 'off', shuffle: false },
-  appVersion: '1.0.0'
+  appVersion: '1.1.0'
 }
 
 function formatTime(seconds: number): string {
@@ -49,6 +49,7 @@ export default function App(): JSX.Element {
   const [newPlaylistName, setNewPlaylistName] = useState('')
   const [importProgress, setImportProgress] = useState<ImportProgress | null>(null)
   const [menu, setMenu] = useState<{ x: number; y: number; trackId: string } | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<Track | null>(null)
 
   const [queue, setQueue] = useState<Track[]>([])
   const [queueIndex, setQueueIndex] = useState(0)
@@ -186,6 +187,35 @@ export default function App(): JSX.Element {
     } else {
       void audio.play().then(() => setPlaying(true)).catch(() => setPlaying(false))
     }
+  }
+
+  const removeFromQueue = (trackId: string): void => {
+    const list = queueRef.current
+    const index = queueIndexRef.current
+    const removedAt = list.findIndex((track) => track.id === trackId)
+    const next = list.filter((track) => track.id !== trackId)
+    queueRef.current = next
+    setQueue(next)
+    if (removedAt < 0) return
+    const audio = audioRef.current
+    if (removedAt < index) {
+      const nextIndex = index - 1
+      queueIndexRef.current = nextIndex
+      setQueueIndex(nextIndex)
+      return
+    }
+    if (removedAt !== index) return
+    if (!audio) return
+    if (next.length === 0) {
+      audio.pause()
+      audio.src = ''
+      setPlaying(false)
+      queueIndexRef.current = 0
+      setQueueIndex(0)
+      return
+    }
+    const nextIndex = Math.min(index, next.length - 1)
+    playList(next, nextIndex)
   }
 
   const skip = (delta: number): void => {
@@ -459,6 +489,7 @@ export default function App(): JSX.Element {
                   playList={playList}
                   onLike={(id) => void window.shockwave.toggleLike(id)}
                   onMenu={setMenu}
+                  onDelete={setPendingDelete}
                 />
               </>
             )}
@@ -473,6 +504,7 @@ export default function App(): JSX.Element {
                   playList={playList}
                   onLike={(id) => void window.shockwave.toggleLike(id)}
                   onMenu={setMenu}
+                  onDelete={setPendingDelete}
                 />
               </>
             )}
@@ -508,6 +540,7 @@ export default function App(): JSX.Element {
                   playList={playList}
                   onLike={(id) => void window.shockwave.toggleLike(id)}
                   onMenu={setMenu}
+                  onDelete={setPendingDelete}
                 />
               </>
             )}
@@ -683,6 +716,44 @@ export default function App(): JSX.Element {
               Add to {playlist.name}
             </button>
           ))}
+          <button
+            className="danger-item"
+            onClick={() => {
+              const track = state.tracks.find((item) => item.id === menu.trackId)
+              if (track) setPendingDelete(track)
+              setMenu(null)
+            }}
+          >
+            Delete song
+          </button>
+        </div>
+      )}
+
+      {pendingDelete && (
+        <div className="modal-back" onClick={() => setPendingDelete(null)}>
+          <div className="modal" onClick={(event) => event.stopPropagation()}>
+            <h2>Delete this song?</h2>
+            <p>
+              <strong>{pendingDelete.title}</strong> by {pendingDelete.artist} will be moved to the
+              Recycle Bin. You can restore it from there if you change your mind.
+            </p>
+            <div className="modal-actions">
+              <button className="ghost" onClick={() => setPendingDelete(null)}>
+                Cancel
+              </button>
+              <button
+                className="danger"
+                onClick={async () => {
+                  const id = pendingDelete.id
+                  removeFromQueue(id)
+                  await window.shockwave.deleteTrack(id)
+                  setPendingDelete(null)
+                }}
+              >
+                Move to Recycle Bin
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -695,7 +766,8 @@ function TrackTable({
   likedSet,
   playList,
   onLike,
-  onMenu
+  onMenu,
+  onDelete
 }: {
   tracks: Track[]
   currentId?: string
@@ -703,6 +775,7 @@ function TrackTable({
   playList: (tracks: Track[], index: number) => void
   onLike: (id: string) => void
   onMenu: (menu: { x: number; y: number; trackId: string }) => void
+  onDelete: (track: Track) => void
 }): JSX.Element {
   if (tracks.length === 0) {
     return <p className="empty">Nothing here yet.</p>
@@ -748,9 +821,21 @@ function TrackTable({
             </td>
             <td className="row-sub">{track.album}</td>
             <td>
-              <button className={`heart ${likedSet.has(track.id) ? 'liked' : ''}`} onClick={() => onLike(track.id)}>
-                <Icons.Heart filled={likedSet.has(track.id)} />
-              </button>
+              <div className="row-actions">
+                <button className={`heart ${likedSet.has(track.id) ? 'liked' : ''}`} onClick={() => onLike(track.id)}>
+                  <Icons.Heart filled={likedSet.has(track.id)} />
+                </button>
+                <button
+                  className="row-delete"
+                  title="Delete song"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onDelete(track)
+                  }}
+                >
+                  <Icons.Trash />
+                </button>
+              </div>
             </td>
             <td className="duration">{formatTime(track.duration)}</td>
           </tr>
