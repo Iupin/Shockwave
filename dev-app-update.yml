@@ -1,3 +1,4 @@
-provider: generic
-url: https://example.com/shockwave-updates
+provider: github
+owner: Iupin
+repo: Shockwave
 updaterCacheDirName: shockwave-updater

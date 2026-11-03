@@ -2,12 +2,14 @@ import { app } from 'electron'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
 
-interface UserConfig {
+export interface UserConfig {
   repositoryPath: string | null
+  lastSeenVersion: string | null
 }
 
 const DEFAULT_CONFIG: UserConfig = {
-  repositoryPath: null
+  repositoryPath: null,
+  lastSeenVersion: null
 }
 
 function configPath(): string {
@@ -22,17 +24,19 @@ export function readUserConfig(): UserConfig {
   try {
     const parsed = JSON.parse(readFileSync(file, 'utf8')) as Partial<UserConfig>
     return {
-      repositoryPath: typeof parsed.repositoryPath === 'string' ? parsed.repositoryPath : null
+      repositoryPath: typeof parsed.repositoryPath === 'string' ? parsed.repositoryPath : null,
+      lastSeenVersion: typeof parsed.lastSeenVersion === 'string' ? parsed.lastSeenVersion : null
     }
   } catch {
     return { ...DEFAULT_CONFIG }
   }
 }
 
-export function writeUserConfig(config: UserConfig): void {
+export function writeUserConfig(patch: Partial<UserConfig>): void {
   const dir = app.getPath('userData')
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true })
   }
+  const config = { ...readUserConfig(), ...patch }
   writeFileSync(configPath(), JSON.stringify(config, null, 2), 'utf8')
 }

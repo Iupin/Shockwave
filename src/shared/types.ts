@@ -46,6 +46,40 @@ export interface AppState {
   tracks: Track[]
   playlists: Playlist[]
   settings: AppSettings
+  appVersion: string
+}
+
+export type UpdatePhase =
+  | 'idle'
+  | 'checking'
+  | 'available'
+  | 'downloading'
+  | 'ready'
+  | 'not-available'
+  | 'error'
+
+export interface UpdateStatus {
+  phase: UpdatePhase
+  currentVersion: string
+  availableVersion?: string
+  percent?: number
+  transferred?: number
+  total?: number
+  message?: string
+}
+
+export interface ReleaseNotes {
+  version: string
+  title: string
+  body: string
+  url: string
+  publishedAt?: string
+}
+
+export interface ChangelogPayload {
+  fromVersion: string
+  toVersion: string
+  releases: ReleaseNotes[]
 }
 
 export interface SearchResults {

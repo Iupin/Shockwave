@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { AppState, ImportProgress, Playlist, RepeatMode, Track } from '../../shared/types'
+import { Changelog } from './Changelog'
 import { Icons } from './icons'
+import { UpdateButton } from './UpdateButton'
 
 type View =
   | { kind: 'home' }
@@ -12,7 +14,8 @@ const emptyState: AppState = {
   repositoryPath: null,
   tracks: [],
   playlists: [],
-  settings: { volume: 0.8, repeat: 'off', shuffle: false }
+  settings: { volume: 0.8, repeat: 'off', shuffle: false },
+  appVersion: '1.0.0'
 }
 
 function formatTime(seconds: number): string {
@@ -253,6 +256,7 @@ export default function App(): JSX.Element {
   if (!state.repositoryPath) {
     return (
       <div className="setup">
+        <Changelog />
         <div className="setup-card">
           <Icons.Logo />
           <h1>Shockwave</h1>
@@ -287,6 +291,7 @@ export default function App(): JSX.Element {
 
   return (
     <div className="app" onClick={() => setMenu(null)}>
+      <Changelog />
       <div className="drag-region">SHOCKWAVE</div>
       <div className="shell">
         <aside className="sidebar">
@@ -370,6 +375,7 @@ export default function App(): JSX.Element {
                 Import URL
               </button>
             </div>
+            <UpdateButton version={state.appVersion} />
             <button className="repo-chip" onClick={() => void window.shockwave.openRepository()}>
               {state.repositoryPath}
             </button>

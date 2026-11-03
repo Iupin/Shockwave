@@ -1,6 +1,6 @@
 {
   "name": "shockwave",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Local audio manager with a Spotify-like interface",
   "main": "./out/main/index.js",
   "author": "Matthew",
@@ -11,9 +11,11 @@
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "dist": "npm run build && electron-builder --publish never",
-    "dist:win": "npm run build && electron-builder --win nsis --publish never"
+    "dist:win": "npm run build && electron-builder --win nsis --publish never",
+    "icon": "node scripts/generate-icon.mjs"
   },
   "dependencies": {
+    "electron-updater": "^6.8.11",
     "music-metadata": "^11.9.0"
   },
   "devDependencies": {

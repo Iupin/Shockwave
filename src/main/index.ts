@@ -3,6 +3,7 @@ import { existsSync, readdirSync } from 'fs'
 import { join } from 'path'
 import { pathToFileURL } from 'url'
 import { AppSettings, AppState, SearchResults } from '../shared/types'
+import { dismissChangelog, pendingChangelog, rememberCurrentVersion } from './changelog'
 import { readUserConfig, writeUserConfig } from './config'
 import { importFromUrl, importLocalFiles } from './importer'
 import { findTrack, loadLibrary, resolveTrackPath, scanLibrary } from './library'
@@ -15,6 +16,13 @@ import {
   toggleLiked
 } from './playlists'
 import { RepositoryLayout, ensureRepository, loadSettings, saveSettings } from './repository'
+import { checkForUpdates, configureUpdater, getUpdateStatus, installUpdate } from './updater'
+
+function appIcon(): string {
+  return app.isPackaged
+    ? join(process.resourcesPath, 'icon.png')
+    : join(__dirname, '../../build/icon.png')
+}
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -48,7 +56,13 @@ async function buildState(): Promise<AppState> {
   const config = readUserConfig()
   if (!config.repositoryPath || !existsSync(config.repositoryPath)) {
     layout = null
-    return { repositoryPath: null, tracks: [], playlists: [], settings: loadSettingsFallback() }
+    return {
+      repositoryPath: null,
+      tracks: [],
+      playlists: [],
+      settings: loadSettingsFallback(),
+      appVersion: app.getVersion()
+    }
   }
   layout = ensureRepository(config.repositoryPath)
   const tracks = await scanLibrary(layout)
@@ -56,7 +70,8 @@ async function buildState(): Promise<AppState> {
     repositoryPath: layout.root,
     tracks,
     playlists: loadPlaylists(layout),
-    settings: loadSettings(layout)
+    settings: loadSettings(layout),
+    appVersion: app.getVersion()
   }
 }
 
@@ -78,6 +93,7 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     title: 'Shockwave',
+    icon: appIcon(),
     titleBarStyle: 'hidden',
     titleBarOverlay: {
       color: '#000000',
@@ -144,6 +160,8 @@ app.whenReady().then(async () => {
   })
 
   registerProtocol()
+  rememberCurrentVersion()
+  configureUpdater((status) => send('update-status', status))
   const config = readUserConfig()
   if (config.repositoryPath && existsSync(config.repositoryPath)) {
     layout = ensureRepository(config.repositoryPath)
@@ -249,3 +267,9 @@ ipcMain.handle('delete-playlist', async (_event, playlistId: string) => {
 ipcMain.handle('save-settings', async (_event, settings: AppSettings) => {
   saveSettings(requireLayout(), settings)
 })
+
+ipcMain.handle('get-update-status', () => getUpdateStatus())
+ipcMain.handle('check-for-updates', () => checkForUpdates())
+ipcMain.handle('install-update', () => installUpdate())
+ipcMain.handle('pending-changelog', () => pendingChangelog())
+ipcMain.handle('dismiss-changelog', () => dismissChangelog())

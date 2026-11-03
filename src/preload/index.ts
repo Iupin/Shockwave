@@ -1,5 +1,13 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
-import type { AppSettings, AppState, ImportProgress, ImportResult, SearchResults } from '../shared/types'
+import type {
+  AppSettings,
+  AppState,
+  ChangelogPayload,
+  ImportProgress,
+  ImportResult,
+  SearchResults,
+  UpdateStatus
+} from '../shared/types'
 
 const api = {
   getPathForFile: (file: File): string => webUtils.getPathForFile(file),
@@ -17,16 +25,32 @@ const api = {
   toggleLike: (trackId: string) => ipcRenderer.invoke('toggle-like', trackId),
   deletePlaylist: (playlistId: string) => ipcRenderer.invoke('delete-playlist', playlistId),
   saveSettings: (settings: AppSettings) => ipcRenderer.invoke('save-settings', settings),
+  getUpdateStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke('get-update-status'),
+  checkForUpdates: (): Promise<UpdateStatus> => ipcRenderer.invoke('check-for-updates'),
+  installUpdate: (): Promise<void> => ipcRenderer.invoke('install-update'),
+  pendingChangelog: (): Promise<ChangelogPayload | null> => ipcRenderer.invoke('pending-changelog'),
+  dismissChangelog: (): Promise<void> => ipcRenderer.invoke('dismiss-changelog'),
+  onUpdateStatus: (callback: (status: UpdateStatus) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, status: UpdateStatus): void => callback(status)
+    ipcRenderer.on('update-status', listener)
+    return () => {
+      ipcRenderer.removeListener('update-status', listener)
+    }
+  },
   onState: (callback: (state: AppState) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, state: AppState): void => callback(state)
     ipcRenderer.on('state', listener)
-    return () => ipcRenderer.removeListener('state', listener)
+    return () => {
+      ipcRenderer.removeListener('state', listener)
+    }
   },
   onImportProgress: (callback: (progress: ImportProgress) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, progress: ImportProgress): void =>
       callback(progress)
     ipcRenderer.on('import-progress', listener)
-    return () => ipcRenderer.removeListener('import-progress', listener)
+    return () => {
+      ipcRenderer.removeListener('import-progress', listener)
+    }
   }
 }
 

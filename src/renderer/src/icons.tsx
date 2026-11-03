@@ -1,4 +1,5 @@
 import type { ReactNode, SVGProps } from 'react'
+import { LogoMark } from './LogoMark'
 
 function Svg({ children, ...props }: SVGProps<SVGSVGElement> & { children: ReactNode }): JSX.Element {
   return (
@@ -9,12 +10,7 @@ function Svg({ children, ...props }: SVGProps<SVGSVGElement> & { children: React
 }
 
 export const Icons = {
-  Logo: () => (
-    <Svg width="28" height="28" viewBox="0 0 24 24">
-      <path d="M3 12c2.5-6 5.5-6 8 0s5.5 6 8 0" fill="none" stroke="currentColor" strokeWidth="2.4" />
-      <path d="M5 16c2-4 4-4 6 0s4 4 6 0" fill="none" stroke="currentColor" strokeWidth="2" />
-    </Svg>
-  ),
+  Logo: () => <LogoMark size={28} fill={100} active />,
   Home: () => (
     <Svg>
       <path d="M12 3 3 10v10h6v-6h6v6h6V10z" />

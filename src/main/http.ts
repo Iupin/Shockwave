@@ -1,13 +1,17 @@
 import { get as httpsGet } from 'https'
 import { get as httpGet } from 'http'
 
-export function fetchBuffer(url: string, redirects = 0): Promise<Buffer> {
+export function fetchBuffer(
+  url: string,
+  redirects = 0,
+  extraHeaders: Record<string, string> = {}
+): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const get = url.startsWith('http://') ? httpGet : httpsGet
-    get(url, { headers: { 'User-Agent': 'Shockwave/0.1' } }, (response) => {
+    get(url, { headers: { 'User-Agent': 'Shockwave/1.0.0', ...extraHeaders } }, (response) => {
       const status = response.statusCode ?? 0
       if (status >= 300 && status < 400 && response.headers.location && redirects < 5) {
-        fetchBuffer(response.headers.location, redirects + 1).then(resolve, reject)
+        fetchBuffer(response.headers.location, redirects + 1, extraHeaders).then(resolve, reject)
         return
       }
       if (status !== 200) {
@@ -22,7 +26,7 @@ export function fetchBuffer(url: string, redirects = 0): Promise<Buffer> {
   })
 }
 
-export async function fetchJson<T>(url: string): Promise<T> {
-  const buffer = await fetchBuffer(url)
+export async function fetchJson<T>(url: string, extraHeaders: Record<string, string> = {}): Promise<T> {
+  const buffer = await fetchBuffer(url, 0, extraHeaders)
   return JSON.parse(buffer.toString('utf8')) as T
 }

@@ -8,12 +8,12 @@ directories:
 files:
   - out
 win:
+  icon: build/icon.ico
   target:
     - target: nsis
       arch:
         - x64
   artifactName: ${productName}-Setup-${version}.${ext}
-  # Unsigned local/generic updates should still be installable later.
   verifyUpdateCodeSignature: false
 nsis:
   oneClick: false
@@ -25,8 +25,12 @@ nsis:
   shortcutName: Shockwave
   uninstallDisplayName: Shockwave
   artifactName: ${productName}-Setup-${version}.${ext}
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  installerHeaderIcon: build/icon.ico
 publish:
-  provider: generic
-  url: https://example.com/shockwave-updates
-  channel: latest
+  provider: github
+  owner: Iupin
+  repo: Shockwave
+  releaseType: release
   publishAutoUpdate: true
