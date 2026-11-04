@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.6.5
+
+Accepting an Aftershock update installs the app.
+
+### Fixed
+
+- Aftershock cleared the update as soon as you accepted it, so Shockwave synced the library and skipped the install.
+- The Aftershock 1.1.1 in this release includes that fix. The top bar still shows the version.
+
+### Installer
+
+- `Shockwave-Setup-1.6.5.exe`
+- `Shockwave-Setup-1.6.5.exe.blockmap`
+- `latest.yml`
+
 ## 1.6.4
 
 Ship Aftershock 1.1.1, which shows its version in the top bar.
