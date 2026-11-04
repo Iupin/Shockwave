@@ -3,6 +3,7 @@ out
 dist
 release
 android app/
+resources/aftershock/
 .DS_Store
 Thumbs.db
 *.log

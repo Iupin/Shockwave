@@ -5,6 +5,9 @@ asar: true
 directories:
   output: release
   buildResources: build
+extraResources:
+  - from: resources/aftershock
+    to: aftershock
 files:
   - out
 win:

@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.6.3
+
+Shockwave can update Aftershock during a sync.
+
+### Added
+
+- Aftershock tells Shockwave which build it is running.
+- When Shockwave is carrying a newer Aftershock app, the phone asks before Android installs it. Sync the library again after Aftershock reopens.
+- A phone that does not report a build still syncs its library and is not offered an app update.
+
+### Installer
+
+- `Shockwave-Setup-1.6.3.exe`
+- `Shockwave-Setup-1.6.3.exe.blockmap`
+- `latest.yml`
+
 ## 1.6.2
 
 Discord shows Shockwave as Listening.

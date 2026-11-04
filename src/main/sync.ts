@@ -5,6 +5,7 @@ import { networkInterfaces } from 'os'
 import { join } from 'path'
 import { hostname } from 'os'
 import { SyncStatus } from '../shared/types'
+import { AftershockPackage, bundledAftershock, newerAftershock } from './aftershock-package'
 import { loadLibrary, resolveTrackPath } from './library'
 import { loadPlaylists } from './playlists'
 import { RepositoryLayout, loadSettings } from './repository'
@@ -16,6 +17,8 @@ export interface AftershockDevice {
   name: string
   address: string
   port: number
+  version?: string
+  build?: number
 }
 
 interface OutgoingFile {
@@ -60,14 +63,19 @@ export function discoverAftershock(timeoutMs = 6000): Promise<AftershockDevice[]
           id?: string
           name?: string
           port?: number
+          version?: unknown
+          build?: unknown
         }
         if (data.v !== 1 || data.type !== 'hello') return
         const id = data.id || rinfo.address
+        const build = typeof data.build === 'number' && Number.isInteger(data.build) ? data.build : undefined
         found.set(id, {
           id,
           name: data.name || 'Aftershock',
           address: rinfo.address,
-          port: data.port && data.port > 0 ? data.port : 47821
+          port: data.port && data.port > 0 ? data.port : 47821,
+          version: typeof data.version === 'string' ? data.version : undefined,
+          build
         })
       } catch {
         /* ignore unrelated packets */
@@ -182,6 +190,82 @@ function sendFile(socket: Socket, file: string): Promise<void> {
   })
 }
 
+function sendFileWithProgress(socket: Socket, file: string, onBytes: (count: number) => void): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const stream = createReadStream(file)
+    let settled = false
+    const onDrain = (): void => {
+      stream.resume()
+    }
+    const finish = (error?: Error): void => {
+      if (settled) return
+      settled = true
+      socket.off('error', fail)
+      socket.off('drain', onDrain)
+      if (error) {
+        stream.destroy()
+        reject(error)
+        return
+      }
+      resolve()
+    }
+    const fail = (error: Error): void => finish(error)
+    stream.on('data', (chunk: string | Buffer) => {
+      const bytes = typeof chunk === 'string' ? Buffer.from(chunk) : chunk
+      onBytes(bytes.length)
+      if (!socket.write(bytes)) stream.pause()
+    })
+    socket.on('drain', onDrain)
+    stream.on('error', fail)
+    socket.on('error', fail)
+    stream.on('end', () => finish())
+  })
+}
+
+async function sendAftershockUpdate(
+  socket: Socket,
+  device: AftershockDevice,
+  update: AftershockPackage,
+  report: (status: SyncStatus) => SyncStatus
+): Promise<SyncStatus> {
+  let sent = 0
+  let reported = 0
+  const push = (): void => {
+    reported = sent
+    report({
+      phase: 'sending',
+      message: `Aftershock ${update.version}`,
+      sent,
+      total: update.size,
+      deviceName: device.name
+    })
+  }
+  push()
+  await writeJson(socket, { v: 1, type: 'update', version: update.version, build: update.build, size: update.size })
+  await sendFileWithProgress(socket, update.filePath, (count) => {
+    sent += count
+    if (sent - reported >= 256 * 1024 || sent >= update.size) push()
+  })
+  const result = await readJson(socket)
+  if (result.type === 'error') {
+    return report({
+      phase: 'error',
+      message: typeof result.message === 'string' ? result.message : 'Aftershock could not install the update',
+      sent,
+      total: update.size,
+      deviceName: device.name
+    })
+  }
+  if (result.type !== 'installed') throw new Error('Aftershock did not install the update')
+  return report({
+    phase: 'done',
+    message: `Aftershock is installing ${update.version}. Open it again and sync once that finishes.`,
+    sent: update.size,
+    total: update.size,
+    deviceName: device.name
+  })
+}
+
 function doneMessage(name: string, pending: OutgoingFile[]): string {
   const songs = pending.filter((file) => file.kind === 'audio').length
   const covers = pending.length - songs
@@ -237,9 +321,12 @@ export async function syncToAftershock(
       })
     })
     socket.setTimeout(60000)
+    const update = newerAftershock(device.build, bundledAftershock())
     report({
       phase: 'waiting',
-      message: `Waiting for ${device.name} to accept`,
+      message: update
+        ? `Waiting for ${device.name} to install Aftershock ${update.version}`
+        : `Waiting for ${device.name} to accept`,
       sent: 0,
       total: 0,
       deviceName: device.name
@@ -249,7 +336,8 @@ export async function syncToAftershock(
       type: 'offer',
       name: hostname() || 'Shockwave',
       tracks: tracks.length,
-      bytes: total
+      bytes: update ? update.size : total,
+      ...(update ? { update: { version: update.version, build: update.build, bytes: update.size } } : {})
     })
     const reply = await readJson(socket)
     socket.setTimeout(0)
@@ -264,6 +352,12 @@ export async function syncToAftershock(
       })
     }
     if (reply.type !== 'accept') throw new Error('Aftershock did not accept the sync')
+    if (reply.update === true) {
+      if (!update) throw new Error('Aftershock asked for an update that is not available')
+      const installed = await sendAftershockUpdate(socket, device, update, report)
+      socket.end()
+      return installed
+    }
 
     const pending = filesToSend(files, heldFiles(reply))
     const sending = pending.reduce((sum, file) => sum + file.size, 0)
