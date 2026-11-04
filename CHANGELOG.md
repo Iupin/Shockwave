@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.6.4
+
+Ship Aftershock 1.1.1, which shows its version in the top bar.
+
+### Added
+
+- Aftershock shows its version as a small tag in the top bar.
+- This Shockwave release carries Aftershock 1.1.1. Sync offers it to a phone on an older build.
+
+### Installer
+
+- `Shockwave-Setup-1.6.4.exe`
+- `Shockwave-Setup-1.6.4.exe.blockmap`
+- `latest.yml`
+
 ## 1.6.3
 
 Shockwave can update Aftershock during a sync.
