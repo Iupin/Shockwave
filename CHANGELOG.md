@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.6.1
+
+Sync only the songs and artwork Aftershock does not already have.
+
+### Added
+
+- A later sync copies new and changed audio and artwork. A file already on the phone, with the same path and size, is not sent again.
+- Playlists, liked songs, and song details still update. Songs removed in Shockwave are removed on the phone.
+
+### Installer
+
+- `Shockwave-Setup-1.6.1.exe`
+- `Shockwave-Setup-1.6.1.exe.blockmap`
+- `latest.yml`
+
 ## 1.6.0
 
 Send a Shockwave library to Aftershock on the same network.

@@ -40,7 +40,7 @@ function broadcastTargets(): string[] {
   return [...targets]
 }
 
-export function discoverAftershock(timeoutMs = 2500): Promise<AftershockDevice[]> {
+export function discoverAftershock(timeoutMs = 6000): Promise<AftershockDevice[]> {
   return new Promise((resolve) => {
     const found = new Map<string, AftershockDevice>()
     const socket = createSocket({ type: 'udp4', reuseAddr: true })
@@ -133,10 +133,30 @@ function readExact(socket: Socket, size: number): Promise<Buffer> {
   })
 }
 
-async function readJson(socket: Socket): Promise<{ type?: string }> {
+async function readJson(socket: Socket): Promise<Record<string, unknown>> {
   const length = (await readExact(socket, 4)).readUInt32BE(0)
-  if (length <= 0 || length > 1024 * 1024) throw new Error('Unexpected reply from Aftershock')
-  return JSON.parse((await readExact(socket, length)).toString('utf8')) as { type?: string }
+  if (length <= 0 || length > 32 * 1024 * 1024) throw new Error('Unexpected reply from Aftershock')
+  const data: unknown = JSON.parse((await readExact(socket, length)).toString('utf8'))
+  if (!data || typeof data !== 'object') throw new Error('Unexpected reply from Aftershock')
+  return data as Record<string, unknown>
+}
+
+function heldFiles(reply: Record<string, unknown>): Map<string, number> | null {
+  if (!Array.isArray(reply.files)) return null
+  const held = new Map<string, number>()
+  for (const entry of reply.files) {
+    if (!entry || typeof entry !== 'object') continue
+    const file = entry as { kind?: unknown; name?: unknown; size?: unknown }
+    if ((file.kind !== 'audio' && file.kind !== 'cover') || typeof file.name !== 'string') continue
+    if (typeof file.size !== 'number' || !Number.isFinite(file.size)) continue
+    held.set(`${file.kind}\0${file.name.replaceAll('\\', '/')}`, file.size)
+  }
+  return held
+}
+
+export function filesToSend(files: OutgoingFile[], held: Map<string, number> | null): OutgoingFile[] {
+  if (!held) return files
+  return files.filter((file) => held.get(`${file.kind}\0${file.name}`) !== file.size)
 }
 
 function sendFile(socket: Socket, file: string): Promise<void> {
@@ -160,6 +180,15 @@ function sendFile(socket: Socket, file: string): Promise<void> {
     stream.on('end', () => finish())
     stream.pipe(socket, { end: false })
   })
+}
+
+function doneMessage(name: string, pending: OutgoingFile[]): string {
+  const songs = pending.filter((file) => file.kind === 'audio').length
+  const covers = pending.length - songs
+  if (songs === 0 && covers === 0) return `Updated ${name}. Everything was already there`
+  if (songs === 0) return `Sent updated artwork to ${name}`
+  const songLabel = songs === 1 ? '1 song' : `${songs} songs`
+  return covers > 0 ? `Sent ${songLabel} and artwork to ${name}` : `Sent ${songLabel} to ${name}`
 }
 
 function libraryFiles(layout: RepositoryLayout): OutgoingFile[] {
@@ -212,7 +241,7 @@ export async function syncToAftershock(
       phase: 'waiting',
       message: `Waiting for ${device.name} to accept`,
       sent: 0,
-      total,
+      total: 0,
       deviceName: device.name
     })
     await writeJson(socket, {
@@ -230,21 +259,25 @@ export async function syncToAftershock(
         phase: 'declined',
         message: `${device.name} declined the sync`,
         sent: 0,
-        total,
+        total: 0,
         deviceName: device.name
       })
     }
     if (reply.type !== 'accept') throw new Error('Aftershock did not accept the sync')
 
+    const pending = filesToSend(files, heldFiles(reply))
+    const sending = pending.reduce((sum, file) => sum + file.size, 0)
     await writeJson(socket, {
       v: 1,
       type: 'manifest',
       tracks,
       playlists: loadPlaylists(layout),
-      settings: loadSettings(layout)
+      settings: loadSettings(layout),
+      files: files.map((file) => ({ kind: file.kind, name: file.name, size: file.size })),
+      bytes: sending
     })
     let sent = 0
-    for (const file of files) {
+    for (const file of pending) {
       await writeJson(socket, { v: 1, type: 'file', kind: file.kind, name: file.name, size: file.size })
       await sendFile(socket, file.path)
       sent += file.size
@@ -252,7 +285,7 @@ export async function syncToAftershock(
         phase: 'sending',
         message: file.name,
         sent,
-        total,
+        total: sending,
         deviceName: device.name
       })
     }
@@ -260,9 +293,9 @@ export async function syncToAftershock(
     socket.end()
     return report({
       phase: 'done',
-      message: `Sent ${tracks.length} songs to ${device.name}`,
-      sent: total,
-      total,
+      message: doneMessage(device.name, pending),
+      sent: sending,
+      total: sending,
       deviceName: device.name
     })
   } catch (error) {
