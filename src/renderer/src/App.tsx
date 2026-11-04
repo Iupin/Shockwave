@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } fr
 import type { AppState, ImportProgress, Playlist, RepeatMode, Track } from '../../shared/types'
 import { Changelog } from './Changelog'
 import { Icons } from './icons'
+import { SyncButton } from './SyncButton'
 import { UpdateButton } from './UpdateButton'
 
 type View =
@@ -17,7 +18,7 @@ const emptyState: AppState = {
   tracks: [],
   playlists: [],
   settings: { volume: 0.8, repeat: 'off', shuffle: false },
-  appVersion: '1.5.0',
+  appVersion: '1.6.0',
   discordRichPresence: true
 }
 
@@ -542,6 +543,7 @@ export default function App(): JSX.Element {
                 Import URL
               </button>
             </div>
+            <SyncButton />
             <button className="round" title="Settings" onClick={() => setSettingsOpen(true)}>
               <Icons.Gear />
             </button>

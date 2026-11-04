@@ -117,6 +117,14 @@ export interface ImportProgress {
   percent?: number
 }
 
+export interface SyncStatus {
+  phase: 'scanning' | 'waiting' | 'sending' | 'done' | 'declined' | 'error'
+  message: string
+  sent: number
+  total: number
+  deviceName?: string
+}
+
 export const DEFAULT_SETTINGS: AppSettings = {
   volume: 0.8,
   repeat: 'off',

@@ -17,6 +17,7 @@ import {
 } from './playlists'
 import { RepositoryLayout, ensureRepository, loadSettings, saveSettings } from './repository'
 import { fileResponse } from './media'
+import { syncLibrary } from './sync'
 import { checkForUpdates, configureUpdater, downloadUpdate, getUpdateStatus, installUpdate } from './updater'
 
 function appIcon(): string {
@@ -294,6 +295,7 @@ ipcMain.handle('install-update', () => installUpdate())
 ipcMain.handle('pending-changelog', () => pendingChangelog())
 ipcMain.handle('dismiss-changelog', () => dismissChangelog())
 ipcMain.handle('set-presence', (_event, payload: PresencePayload | null) => setPresence(payload))
+ipcMain.handle('sync-aftershock', () => syncLibrary(requireLayout(), (status) => send('sync-status', status)))
 ipcMain.handle('set-discord-enabled', async (_event, value: boolean) => {
   await setDiscordEnabled(value)
   await refreshRenderer()

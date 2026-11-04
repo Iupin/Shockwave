@@ -1,6 +1,6 @@
 {
   "name": "shockwave",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Local audio manager with a Spotify-like interface",
   "main": "./out/main/index.js",
   "author": "Matthew",

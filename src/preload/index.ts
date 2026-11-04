@@ -7,6 +7,7 @@ import type {
   ImportResult,
   SearchResults,
   PresencePayload,
+  SyncStatus,
   TrackEdit,
   UpdateStatus
 } from '../shared/types'
@@ -37,6 +38,14 @@ const api = {
   dismissChangelog: (): Promise<void> => ipcRenderer.invoke('dismiss-changelog'),
   setPresence: (payload: PresencePayload | null) => ipcRenderer.invoke('set-presence', payload),
   setDiscordEnabled: (enabled: boolean) => ipcRenderer.invoke('set-discord-enabled', enabled),
+  syncAftershock: (): Promise<SyncStatus> => ipcRenderer.invoke('sync-aftershock'),
+  onSyncStatus: (callback: (status: SyncStatus) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, status: SyncStatus): void => callback(status)
+    ipcRenderer.on('sync-status', listener)
+    return () => {
+      ipcRenderer.removeListener('sync-status', listener)
+    }
+  },
   onUpdateStatus: (callback: (status: UpdateStatus) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, status: UpdateStatus): void => callback(status)
     ipcRenderer.on('update-status', listener)

@@ -2,6 +2,7 @@ node_modules
 out
 dist
 release
+android app/
 .DS_Store
 Thumbs.db
 *.log

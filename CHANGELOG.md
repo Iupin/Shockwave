@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.6.0
+
+Send a Shockwave library to Aftershock on the same network.
+
+### Added
+
+- Shockwave looks for Aftershock over the local network. Sync is in the top bar.
+- When a phone is found, Aftershock asks before anything is copied.
+- Shockwave sends the songs, artwork, playlists, and liked songs. The desktop library is the source, and the phone replaces its copy.
+
+### Installer
+
+- `Shockwave-Setup-1.6.0.exe`
+- `Shockwave-Setup-1.6.0.exe.blockmap`
+- `latest.yml`
+
 ## 1.5.0
 
 Discord Rich Presence while Shockwave is open.
