@@ -1,8 +1,13 @@
-import { Client, type Presence } from 'discord-rpc'
+import { Client } from 'discord-rpc'
 import type { PresencePayload } from '../shared/types'
 import { readUserConfig, writeUserConfig } from './config'
 
 const CLIENT_ID = '1567315925705822358'
+const LISTENING = 2
+
+type RpcClient = Client & {
+  request(cmd: string, args?: object): Promise<unknown>
+}
 
 let client: Client | null = null
 let connecting: Promise<void> | null = null
@@ -44,32 +49,29 @@ async function ensureClient(): Promise<Client | null> {
   return client
 }
 
-function activityFrom(payload: PresencePayload | null): Presence & { type: number } {
-  if (!payload?.title) {
-    return {
-      details: 'Browsing library',
-      state: 'Shockwave',
-      largeImageKey: 'logo',
-      largeImageText: 'Shockwave',
-      instance: false,
-      type: 2
-    }
+function activityFrom(payload: PresencePayload | null): Record<string, unknown> {
+  const details = payload?.title
+    ? clip(payload.playing ? payload.title : `${payload.title} (paused)`)
+    : 'Browsing library'
+  const state = payload?.title ? clip(payload.artist || 'Unknown artist') : 'Shockwave'
+  const activity: Record<string, unknown> = {
+    type: LISTENING,
+    details,
+    state,
+    assets: {
+      large_image: 'logo',
+      large_text: clip(payload?.album || 'Shockwave')
+    },
+    instance: false
   }
 
-  const activity: Presence & { type: number } = {
-    details: clip(payload.playing ? payload.title : `${payload.title} (paused)`),
-    state: clip(payload.artist || 'Unknown artist'),
-    largeImageKey: 'logo',
-    largeImageText: clip(payload.album || 'Shockwave'),
-    instance: false,
-    type: 2
-  }
-
-  if (payload.playing && payload.duration > 0) {
+  if (payload?.title && payload.playing && payload.duration > 0) {
     const elapsedMs = Math.max(0, Math.min(payload.elapsed, payload.duration)) * 1000
     const start = Date.now() - elapsedMs
-    activity.startTimestamp = new Date(start)
-    activity.endTimestamp = new Date(start + payload.duration * 1000)
+    activity.timestamps = {
+      start,
+      end: start + payload.duration * 1000
+    }
   }
 
   return activity
@@ -104,7 +106,10 @@ export async function setPresence(payload: PresencePayload | null): Promise<void
   const rpc = await ensureClient()
   if (!rpc) return
   try {
-    await rpc.setActivity(activityFrom(payload))
+    await (rpc as RpcClient).request('SET_ACTIVITY', {
+      pid: process.pid,
+      activity: activityFrom(payload)
+    })
   } catch {
     client = null
   }

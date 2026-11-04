@@ -18,7 +18,7 @@ const emptyState: AppState = {
   tracks: [],
   playlists: [],
   settings: { volume: 0.8, repeat: 'off', shuffle: false },
-  appVersion: '1.6.1',
+  appVersion: '1.6.2',
   discordRichPresence: true
 }
 

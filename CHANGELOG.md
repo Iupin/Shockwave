@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.6.2
+
+Discord shows Shockwave as Listening.
+
+### Changed
+
+- Rich Presence uses Listening instead of Playing. A song still shows its title, artist, and duration bar.
+
+### Installer
+
+- `Shockwave-Setup-1.6.2.exe`
+- `Shockwave-Setup-1.6.2.exe.blockmap`
+- `latest.yml`
+
 ## 1.6.1
 
 Sync only the songs and artwork Aftershock does not already have.
