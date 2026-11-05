@@ -27,6 +27,18 @@ export interface Track {
   mtimeMs: number
 }
 
+export interface LyricLine {
+  time: number | null
+  text: string
+}
+
+export interface Lyrics {
+  synced: boolean
+  instrumental: boolean
+  missing: boolean
+  lines: LyricLine[]
+}
+
 export interface TrackEdit {
   title: string
   artist: string

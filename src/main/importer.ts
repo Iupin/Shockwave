@@ -5,6 +5,7 @@ import { get } from 'https'
 import { basename, extname, join } from 'path'
 import { AUDIO_EXTENSIONS, ImportProgress, Track } from '../shared/types'
 import { attachCover, ingestFile, scanLibrary, updateTrack } from './library'
+import { ffmpegBinary, ffmpegDir } from './ffmpeg'
 import { downloadArtwork, enrichSong, identityFromVideo, type YtDlpInfo } from './metadata'
 import { RepositoryLayout } from './repository'
 
@@ -73,10 +74,6 @@ async function ensureYtDlp(onProgress: (progress: ImportProgress) => void): Prom
     chmodSync(bundled, 0o755)
   }
   return bundled
-}
-
-function hasFfmpeg(): Promise<boolean> {
-  return which(process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg').then(Boolean)
 }
 
 function runYtDlp(
@@ -162,7 +159,7 @@ function embedMetadata(
       `album=${identity.album ?? ''}`,
       outPath
     )
-    const child = spawn(process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg', args, { windowsHide: true })
+    const child = spawn(ffmpegBinary(), args, { windowsHide: true })
     child.on('error', () => resolve())
     child.on('close', (code) => {
       if (code === 0 && existsSync(outPath)) {
@@ -190,7 +187,7 @@ export async function importFromUrl(
   onProgress: (progress: ImportProgress) => void
 ): Promise<void> {
   const binary = await ensureYtDlp(onProgress)
-  const ffmpeg = await hasFfmpeg()
+  const ffmpeg = ffmpegDir()
   const output = join(layout.music, '%(id)s.%(ext)s')
   const args = [
     '--no-playlist',
@@ -209,6 +206,8 @@ export async function importFromUrl(
 
   if (ffmpeg) {
     args.unshift(
+      '--ffmpeg-location',
+      ffmpeg,
       '-f',
       'bestaudio/best',
       '--extract-audio',

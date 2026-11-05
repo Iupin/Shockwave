@@ -38,6 +38,6 @@ export function newerAftershock(
   phoneBuild: number | undefined,
   packaged: AftershockPackage | null
 ): AftershockPackage | null {
-  if (!packaged || phoneBuild == null) return null
-  return packaged.build > phoneBuild ? packaged : null
+  if (!packaged) return null
+  return packaged.build > (phoneBuild ?? 0) ? packaged : null
 }

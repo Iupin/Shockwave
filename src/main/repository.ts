@@ -7,6 +7,7 @@ export interface RepositoryLayout {
   music: string
   playlists: string
   covers: string
+  lyrics: string
   libraryFile: string
   settingsFile: string
 }
@@ -17,6 +18,7 @@ export function layoutFor(root: string): RepositoryLayout {
     music: join(root, 'music'),
     playlists: join(root, 'playlists'),
     covers: join(root, 'covers'),
+    lyrics: join(root, 'lyrics'),
     libraryFile: join(root, 'library.json'),
     settingsFile: join(root, 'settings.json')
   }
@@ -24,7 +26,7 @@ export function layoutFor(root: string): RepositoryLayout {
 
 export function ensureRepository(root: string): RepositoryLayout {
   const layout = layoutFor(root)
-  for (const dir of [layout.root, layout.music, layout.playlists, layout.covers]) {
+  for (const dir of [layout.root, layout.music, layout.playlists, layout.covers, layout.lyrics]) {
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true })
     }

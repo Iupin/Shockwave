@@ -5,6 +5,8 @@ import { copyFileSync, existsSync, readdirSync, renameSync, statSync, unlinkSync
 import { extname, isAbsolute, join, relative } from 'path'
 import { parseFile } from 'music-metadata'
 import { AUDIO_EXTENSIONS, Track, TrackEdit } from '../shared/types'
+import { ffmpegBinary } from './ffmpeg'
+import { deleteLyrics, pruneLyrics } from './lyrics'
 import { removeTrackFromAllPlaylists } from './playlists'
 import { RepositoryLayout, readJson, writeJson } from './repository'
 
@@ -62,6 +64,7 @@ export async function scanLibrary(layout: RepositoryLayout): Promise<Track[]> {
   }
 
   saveLibrary(layout, next)
+  pruneLyrics(layout, new Set(next.map((track) => track.id)))
   return next
 }
 
@@ -115,6 +118,7 @@ export async function deleteTrack(layout: RepositoryLayout, trackId: string): Pr
     tracks.filter((item) => item.id !== trackId)
   )
   removeTrackFromAllPlaylists(layout, trackId)
+  deleteLyrics(layout, trackId)
 
   if (track.coverId) {
     const stillUsed = loadLibrary(layout).some((item) => item.coverId === track.coverId)
@@ -161,6 +165,7 @@ export function updateTrackById(layout: RepositoryLayout, trackId: string, edit:
     genre: edit.genre?.trim() || undefined
   }
   saveLibrary(layout, tracks)
+  deleteLyrics(layout, trackId)
   return tracks[index]
 }
 
@@ -187,7 +192,7 @@ function writeFileTags(filePath: string, edit: TrackEdit): Promise<void> {
       `genre=${edit.genre ?? ''}`,
       outPath
     ]
-    const child = spawn(process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg', args, { windowsHide: true })
+    const child = spawn(ffmpegBinary(), args, { windowsHide: true })
     child.on('error', () => resolve())
     child.on('close', (code) => {
       if (code === 0 && existsSync(outPath)) {

@@ -10,6 +10,8 @@ extraResources:
     to: aftershock
   - from: resources/platform-tools
     to: platform-tools
+  - from: resources/ffmpeg
+    to: ffmpeg
 files:
   - out
 win:

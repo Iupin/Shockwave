@@ -3,6 +3,7 @@ import type { AppState, ImportProgress, Playlist, RepeatMode, Track } from '../.
 import { AftershockInstall } from './AftershockInstall'
 import { Changelog } from './Changelog'
 import { Icons } from './icons'
+import { LyricsPanel } from './LyricsPanel'
 import { SyncButton } from './SyncButton'
 import { UpdateButton } from './UpdateButton'
 
@@ -19,7 +20,7 @@ const emptyState: AppState = {
   tracks: [],
   playlists: [],
   settings: { volume: 0.8, repeat: 'off', shuffle: false },
-  appVersion: '1.6.13',
+  appVersion: '1.6.18',
   discordRichPresence: true,
   aftershockInstalled: false,
   aftershockPromptSeen: false
@@ -82,6 +83,7 @@ export default function App(): JSX.Element {
   const [menu, setMenu] = useState<{ x: number; y: number; trackId: string } | null>(null)
   const [pendingDelete, setPendingDelete] = useState<Track | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [lyricsOpen, setLyricsOpen] = useState(false)
   const [pendingEdit, setPendingEdit] = useState<Track | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editArtist, setEditArtist] = useState('')
@@ -102,6 +104,11 @@ export default function App(): JSX.Element {
   const playingRef = useRef(false)
 
   const current = queue[queueIndex]
+
+  useEffect(() => {
+    if (!current) return
+    void window.shockwave.getLyrics(current.id).catch(() => {})
+  }, [current?.id])
   queueRef.current = queue
   queueIndexRef.current = queueIndex
   settingsRef.current = state.settings
@@ -800,7 +807,7 @@ export default function App(): JSX.Element {
         </section>
       </div>
 
-      <footer className="player">
+      <footer className={lyricsOpen ? 'player over-lyrics' : 'player'}>
         <div className="now">
           <div className="cover-sm">
             {coverUrl(current) ? <img src={coverUrl(current)} alt="" /> : <Icons.Note />}
@@ -828,6 +835,14 @@ export default function App(): JSX.Element {
               <Icons.Heart filled={likedSet.has(current.id)} />
             </button>
           )}
+          <button
+            className={`player-icon ${lyricsOpen ? 'on' : ''}`}
+            title="Lyrics"
+            disabled={!current}
+            onClick={() => setLyricsOpen((open) => !open)}
+          >
+            <Icons.Lyrics />
+          </button>
         </div>
         <div className="controls">
           <div className="control-row">
@@ -910,6 +925,10 @@ export default function App(): JSX.Element {
       </footer>
 
       {dragging && <div className="drop-overlay">Drop audio into your repository</div>}
+
+      {lyricsOpen && current && (
+        <LyricsPanel track={current} cover={coverUrl(current)} elapsed={elapsed} onClose={() => setLyricsOpen(false)} />
+      )}
 
       {urlOpen && (
         <div className="modal-back" onClick={() => setUrlOpen(false)}>

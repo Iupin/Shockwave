@@ -706,6 +706,179 @@ button {
   cursor: default;
 }
 
+.player.over-lyrics {
+  position: relative;
+  z-index: 26;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.78));
+  backdrop-filter: blur(18px);
+}
+
+.player-icon.on {
+  color: var(--text);
+}
+
+.lyrics-back {
+  position: fixed;
+  inset: 0;
+  z-index: 24;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #050505;
+}
+
+.lyrics-bg {
+  position: absolute;
+  inset: -35%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.lyrics-bg-art,
+.lyrics-bg-fallback {
+  position: absolute;
+  inset: -15%;
+  width: 130%;
+  height: 130%;
+  object-fit: cover;
+  filter: blur(72px);
+  transform-origin: center center;
+  animation: lyrics-spin 56s linear infinite;
+}
+
+.lyrics-bg-fallback {
+  background:
+    radial-gradient(circle at 30% 28%, #1ed760 0%, transparent 42%),
+    radial-gradient(circle at 72% 68%, #145c32 0%, transparent 46%),
+    #121212;
+}
+
+.lyrics-bg-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.5) 42%, rgba(0, 0, 0, 0.72) 100%);
+}
+
+@keyframes lyrics-spin {
+  from {
+    transform: rotate(0deg) scale(1.55);
+  }
+  to {
+    transform: rotate(360deg) scale(1.55);
+  }
+}
+
+.lyrics-stage {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--player);
+}
+
+.lyrics-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 32px 8px;
+  -webkit-app-region: drag;
+}
+
+.lyrics-top button,
+.lyrics-scroll {
+  -webkit-app-region: no-drag;
+}
+
+.lyrics-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.35);
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  flex: none;
+}
+
+.lyrics-close:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.lyrics-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.lyrics-meta {
+  min-width: 0;
+}
+
+.lyrics-meta strong,
+.lyrics-meta span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lyrics-meta strong {
+  font-size: 16px;
+}
+
+.lyrics-meta span {
+  color: var(--muted);
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+.lyrics-scroll {
+  flex: 1;
+  overflow: auto;
+  padding: 7vh 8vw 22vh;
+  mask-image: linear-gradient(180deg, transparent 0%, #000 10%, #000 86%, transparent 100%);
+}
+
+.lyrics-column {
+  width: min(760px, 100%);
+}
+
+.lyric-line {
+  color: rgba(255, 255, 255, 0.38);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 18px 0;
+  transition: color 0.25s ease, font-size 0.25s ease;
+}
+
+.lyric-line.active {
+  color: #fff;
+  font-size: 34px;
+}
+
+.lyric-status {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lyrics-bg-art,
+  .lyrics-bg-fallback {
+    animation: none;
+    transform: scale(1.55);
+  }
+}
+
 .wizard {
   width: min(520px, calc(100% - 32px));
 }

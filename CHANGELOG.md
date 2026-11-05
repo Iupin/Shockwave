@@ -1,5 +1,84 @@
 # Changelog
 
+## 1.6.18
+
+Library sync sends several songs at the same time instead of waiting for each one to finish.
+
+### Changed
+
+- Up to four songs transfer together, so a batch does not take as long as one song times the number of songs.
+- Shockwave starts the sync as soon as the phone answers.
+- The progress text says how many songs are sending, instead of naming each file.
+- Aftershock 1.1.6 is required before a sync.
+
+### Installer
+
+- `Shockwave-Setup-1.6.18.exe`
+- `Shockwave-Setup-1.6.18.exe.blockmap`
+- `latest.yml`
+
+## 1.6.17
+
+YouTube imports are converted to M4A with ffmpeg shipped inside Shockwave.
+
+### Changed
+
+- ffmpeg is included with Shockwave, so a URL import no longer depends on ffmpeg being installed on the PC.
+- New imports save M4A instead of the original WebM.
+
+### Installer
+
+- `Shockwave-Setup-1.6.17.exe`
+- `Shockwave-Setup-1.6.17.exe.blockmap`
+- `latest.yml`
+
+## 1.6.16
+
+Library sync is packed into one archive, and an older Aftershock has to update before it can sync.
+
+### Changed
+
+- Shockwave compresses uncompressed audio such as wav and aiff, then sends the library as one archive for Aftershock to unpack. Songs that are already compressed, such as mp3 and m4a, stay as they are so the transfer is not slowed down.
+- Aftershock 1.1.5 is required before a sync. If the phone is older, Shockwave sends the update and waits until that install is done.
+
+### Installer
+
+- `Shockwave-Setup-1.6.16.exe`
+- `Shockwave-Setup-1.6.16.exe.blockmap`
+- `latest.yml`
+
+## 1.6.15
+
+The lyrics screen uses the song’s cover, and the player stays on top of it. Aftershock does the same.
+
+### Changed
+
+- Shockwave lyrics sit on a blurred, slowly rotating cover, with the playback controls kept above the words.
+- Aftershock 1.1.4 uses the same lyrics screen.
+
+### Installer
+
+- `Shockwave-Setup-1.6.15.exe`
+- `Shockwave-Setup-1.6.15.exe.blockmap`
+- `latest.yml`
+
+## 1.6.14
+
+Timed lyrics for the song that is playing, on Shockwave and Aftershock.
+
+### Added
+
+- A lyrics button beside the current song opens a screen that follows the line being sung.
+- Lyrics are looked up, then saved with the library so they are not fetched again.
+- Deleting a song, or changing its title, artist, or album, removes its saved lyrics.
+- Sync sends the saved lyrics to Aftershock, which has its own lyrics view.
+
+### Installer
+
+- `Shockwave-Setup-1.6.14.exe`
+- `Shockwave-Setup-1.6.14.exe.blockmap`
+- `latest.yml`
+
 ## 1.6.13
 
 Aftershock can be installed again from Settings.

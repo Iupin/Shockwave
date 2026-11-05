@@ -106,6 +106,12 @@ export const Icons = {
       <path d="M3 17.3V21h3.7L18.8 8.9l-3.7-3.7zM21.7 6.04c.4-.4.4-1 0-1.4l-2.34-2.34a1 1 0 0 0-1.4 0l-1.83 1.83 3.7 3.7z" />
     </Svg>
   ),
+  Lyrics: () => (
+    <Svg>
+      <path d="M4 5h11v2H4zm0 4h8v2H4zm0 4h6v2H4z" />
+      <path d="M16 8.5v6.1a2.4 2.4 0 1 1-1.6-2.26V8.5H16z" />
+    </Svg>
+  ),
   Sync: () => (
     <Svg>
       <path

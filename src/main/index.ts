@@ -15,6 +15,7 @@ import { readUserConfig, writeUserConfig } from './config'
 import { setDiscordEnabled, setPresence, startDiscord, stopDiscord } from './discord'
 import { importFromUrl, importLocalFiles } from './importer'
 import { deleteTrack, editTrack, findTrack, loadLibrary, resolveTrackPath, scanLibrary } from './library'
+import { lyricsFor } from './lyrics'
 import {
   addToPlaylist,
   createPlaylist,
@@ -309,6 +310,12 @@ ipcMain.handle('pending-changelog', () => pendingChangelog())
 ipcMain.handle('dismiss-changelog', () => dismissChangelog())
 ipcMain.handle('set-presence', (_event, payload: PresencePayload | null) => setPresence(payload))
 ipcMain.handle('sync-aftershock', () => syncLibrary(requireLayout(), (status) => send('sync-status', status)))
+ipcMain.handle('get-lyrics', (_event, trackId: string, force = false) => {
+  const layout = requireLayout()
+  const track = findTrack(layout, trackId)
+  if (!track) throw new Error('That song is no longer in the library')
+  return lyricsFor(layout, track, force === true)
+})
 ipcMain.handle('mark-aftershock-prompt-seen', async () => {
   writeUserConfig({ aftershockPromptSeen: true })
   await refreshRenderer()

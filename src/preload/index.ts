@@ -10,6 +10,7 @@ import type {
   ImportResult,
   SearchResults,
   PresencePayload,
+  Lyrics,
   SyncStatus,
   TrackEdit,
   UpdateStatus
@@ -42,6 +43,7 @@ const api = {
   setPresence: (payload: PresencePayload | null) => ipcRenderer.invoke('set-presence', payload),
   setDiscordEnabled: (enabled: boolean) => ipcRenderer.invoke('set-discord-enabled', enabled),
   syncAftershock: (): Promise<SyncStatus> => ipcRenderer.invoke('sync-aftershock'),
+  getLyrics: (trackId: string, force = false): Promise<Lyrics> => ipcRenderer.invoke('get-lyrics', trackId, force),
   markAftershockInstalled: (): Promise<void> => ipcRenderer.invoke('mark-aftershock-installed'),
   markAftershockPromptSeen: (): Promise<void> => ipcRenderer.invoke('mark-aftershock-prompt-seen'),
   pairAftershock: (input: AftershockPairRequest): Promise<AftershockCommandResult> =>

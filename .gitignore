@@ -5,6 +5,7 @@ release
 android app/
 resources/aftershock/
 resources/platform-tools/
+resources/ffmpeg/
 .DS_Store
 Thumbs.db
 *.log
