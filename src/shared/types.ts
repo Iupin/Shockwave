@@ -56,6 +56,22 @@ export interface AppState {
   settings: AppSettings
   appVersion: string
   discordRichPresence: boolean
+  aftershockInstalled: boolean
+  aftershockPromptSeen: boolean
+}
+
+export interface AftershockEndpoint {
+  address: string
+  port: number
+}
+
+export interface AftershockPairRequest extends AftershockEndpoint {
+  code: string
+}
+
+export interface AftershockCommandResult {
+  ok: boolean
+  message: string
 }
 
 export interface PresencePayload {

@@ -8,6 +8,8 @@ directories:
 extraResources:
   - from: resources/aftershock
     to: aftershock
+  - from: resources/platform-tools
+    to: platform-tools
 files:
   - out
 win:
@@ -21,6 +23,7 @@ win:
 nsis:
   oneClick: false
   perMachine: false
+  include: installer.nsh
   allowToChangeInstallationDirectory: true
   differentialPackage: true
   createDesktopShortcut: always

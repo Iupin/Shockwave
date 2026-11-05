@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import type { AppState, ImportProgress, Playlist, RepeatMode, Track } from '../../shared/types'
+import { AftershockInstall } from './AftershockInstall'
 import { Changelog } from './Changelog'
 import { Icons } from './icons'
 import { SyncButton } from './SyncButton'
@@ -18,8 +19,10 @@ const emptyState: AppState = {
   tracks: [],
   playlists: [],
   settings: { volume: 0.8, repeat: 'off', shuffle: false },
-  appVersion: '1.6.5',
-  discordRichPresence: true
+  appVersion: '1.6.13',
+  discordRichPresence: true,
+  aftershockInstalled: false,
+  aftershockPromptSeen: false
 }
 
 function formatTime(seconds: number): string {
@@ -429,11 +432,13 @@ export default function App(): JSX.Element {
         <SettingsModal
           open={settingsOpen}
           enabled={state.discordRichPresence}
+          canReinstall={state.aftershockInstalled}
           onClose={() => setSettingsOpen(false)}
           onToggle={async (value) => {
             await window.shockwave.setDiscordEnabled(value)
             setState((prev) => ({ ...prev, discordRichPresence: value }))
           }}
+          onInstalled={() => setState((prev) => ({ ...prev, aftershockInstalled: true }))}
         />
       </div>
     )
@@ -543,7 +548,6 @@ export default function App(): JSX.Element {
                 Import URL
               </button>
             </div>
-            <SyncButton />
             <button className="round" title="Settings" onClick={() => setSettingsOpen(true)}>
               <Icons.Gear />
             </button>
@@ -885,6 +889,12 @@ export default function App(): JSX.Element {
           </div>
         </div>
         <div className="volume-wrap">
+          <SyncButton
+            installed={state.aftershockInstalled}
+            promptSeen={state.aftershockPromptSeen}
+            onInstalled={() => setState((prev) => ({ ...prev, aftershockInstalled: true }))}
+            onPromptSeen={() => setState((prev) => ({ ...prev, aftershockPromptSeen: true }))}
+          />
           <Icons.Volume />
           <div className="volume">
             <input
@@ -1090,11 +1100,13 @@ export default function App(): JSX.Element {
       <SettingsModal
         open={settingsOpen}
         enabled={state.discordRichPresence}
+        canReinstall={state.aftershockInstalled}
         onClose={() => setSettingsOpen(false)}
         onToggle={async (value) => {
           await window.shockwave.setDiscordEnabled(value)
           setState((prev) => ({ ...prev, discordRichPresence: value }))
         }}
+        onInstalled={() => setState((prev) => ({ ...prev, aftershockInstalled: true }))}
       />
     </div>
   )
@@ -1103,42 +1115,76 @@ export default function App(): JSX.Element {
 function SettingsModal({
   open,
   enabled,
+  canReinstall,
   onClose,
-  onToggle
+  onToggle,
+  onInstalled
 }: {
   open: boolean
   enabled: boolean
+  canReinstall: boolean
   onClose: () => void
   onToggle: (value: boolean) => void | Promise<void>
-}): JSX.Element | null {
-  if (!open) return null
+  onInstalled: () => void
+}): JSX.Element {
+  const [reinstall, setReinstall] = useState(false)
   return (
-    <div className="modal-back" onClick={onClose}>
-      <div className="modal" onClick={(event) => event.stopPropagation()}>
-        <h2>Settings</h2>
-        <div className="setting-row">
-          <div>
-            <strong>Discord Rich Presence</strong>
-            <p className="row-sub">
-              Show Shockwave on Discord, including the song you are playing and a duration bar.
-            </p>
+    <>
+      {open && (
+        <div className="modal-back" onClick={onClose}>
+          <div className="modal" onClick={(event) => event.stopPropagation()}>
+            <h2>Settings</h2>
+            <div className="setting-row">
+              <div>
+                <strong>Discord Rich Presence</strong>
+                <p className="row-sub">
+                  Show Shockwave on Discord, including the song you are playing and a duration bar.
+                </p>
+              </div>
+              <button
+                className={`toggle${enabled ? ' on' : ''}`}
+                role="switch"
+                aria-checked={enabled}
+                onClick={() => void onToggle(!enabled)}
+              >
+                <span className="toggle-knob" />
+              </button>
+            </div>
+            <div className="setting-row">
+              <div>
+                <strong>Reinstall Aftershock</strong>
+                <p className="row-sub">
+                  {canReinstall
+                    ? 'Install Aftershock on your phone again over wireless debugging.'
+                    : 'Available after Aftershock has been installed once.'}
+                </p>
+              </div>
+              <button
+                className="ghost"
+                disabled={!canReinstall}
+                onClick={() => {
+                  onClose()
+                  setReinstall(true)
+                }}
+              >
+                Reinstall
+              </button>
+            </div>
+            <div className="modal-actions">
+              <button className="primary" onClick={onClose}>
+                Done
+              </button>
+            </div>
           </div>
-          <button
-            className={`toggle${enabled ? ' on' : ''}`}
-            role="switch"
-            aria-checked={enabled}
-            onClick={() => void onToggle(!enabled)}
-          >
-            <span className="toggle-knob" />
-          </button>
         </div>
-        <div className="modal-actions">
-          <button className="primary" onClick={onClose}>
-            Done
-          </button>
-        </div>
-      </div>
-    </div>
+      )}
+      {reinstall && (
+        <AftershockInstall
+          onClose={() => setReinstall(false)}
+          onInstalled={onInstalled}
+        />
+      )}
+    </>
   )
 }
 

@@ -1,5 +1,122 @@
 # Changelog
 
+## 1.6.13
+
+Aftershock can be installed again from Settings.
+
+### Added
+
+- Settings has Reinstall Aftershock, which opens the wireless debugging wizard.
+- That option stays greyed out until Aftershock has been installed once.
+
+### Installer
+
+- `Shockwave-Setup-1.6.13.exe`
+- `Shockwave-Setup-1.6.13.exe.blockmap`
+- `latest.yml`
+
+## 1.6.12
+
+The Aftershock icon glows until it is opened once.
+
+### Changed
+
+- The phone icon glows green until the first click, then returns to its normal colour.
+
+### Installer
+
+- `Shockwave-Setup-1.6.12.exe`
+- `Shockwave-Setup-1.6.12.exe.blockmap`
+- `latest.yml`
+
+## 1.6.11
+
+The phone icon stays in the player. Aftershock setup opens from it.
+
+### Changed
+
+- Install and It's already installed are in a popup opened from the phone icon.
+- The wireless debugging wizard opens in that same popup.
+
+### Installer
+
+- `Shockwave-Setup-1.6.11.exe`
+- `Shockwave-Setup-1.6.11.exe.blockmap`
+- `latest.yml`
+
+## 1.6.10
+
+Shockwave can install Aftershock over wireless debugging.
+
+### Added
+
+- Until Aftershock has been installed, the player shows Install and It's already installed.
+- Install walks through developer options and wireless debugging, pairs with the phone’s code, connects over Wi-Fi, and installs the bundled app.
+- Shockwave records the install only after it confirms Aftershock is on the phone. It's already installed records it without checking.
+
+### Installer
+
+- `Shockwave-Setup-1.6.10.exe`
+- `Shockwave-Setup-1.6.10.exe.blockmap`
+- `latest.yml`
+
+## 1.6.9
+
+The Aftershock sync control looks like a phone sending a signal.
+
+### Changed
+
+- The sync icon is a phone with signal waves.
+
+### Installer
+
+- `Shockwave-Setup-1.6.9.exe`
+- `Shockwave-Setup-1.6.9.exe.blockmap`
+- `latest.yml`
+
+## 1.6.8
+
+Aftershock sync is an icon beside the volume control.
+
+### Changed
+
+- The Sync button is an icon in the player, next to the volume bar.
+
+### Installer
+
+- `Shockwave-Setup-1.6.8.exe`
+- `Shockwave-Setup-1.6.8.exe.blockmap`
+- `latest.yml`
+
+## 1.6.7
+
+Scrollbars are a thin grey rod.
+
+### Changed
+
+- Scrollbars are a slim rounded grey bar instead of the Windows default.
+
+### Installer
+
+- `Shockwave-Setup-1.6.7.exe`
+- `Shockwave-Setup-1.6.7.exe.blockmap`
+- `latest.yml`
+
+## 1.6.6
+
+Aftershock’s navigation icons stay light grey until the current tab is selected.
+
+### Changed
+
+- Home, Search, and Library are light grey, and white on the selected tab.
+- This release carries Aftershock 1.1.2.
+
+### Installer
+
+- `Shockwave-Setup-1.6.6.exe`
+- `Shockwave-Setup-1.6.6.exe.blockmap`
+- `latest.yml`
+
 ## 1.6.5
 
 Accepting an Aftershock update installs the app.
@@ -7,6 +124,7 @@ Accepting an Aftershock update installs the app.
 ### Fixed
 
 - Aftershock cleared the update as soon as you accepted it, so Shockwave synced the library and skipped the install.
+- Updating Shockwave stopped with "Failed to uninstall old application files" when a file in the install folder was still open. The installer now replaces those files in place.
 - The Aftershock 1.1.1 in this release includes that fix. The top bar still shows the version.
 
 ### Installer

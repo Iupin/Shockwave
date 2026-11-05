@@ -1,6 +1,6 @@
 {
   "name": "shockwave",
-  "version": "1.6.5",
+  "version": "1.6.13",
   "description": "Local audio manager with a Spotify-like interface",
   "main": "./out/main/index.js",
   "author": "Matthew",
@@ -10,8 +10,8 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
-    "dist": "npm run build && node scripts/stage-aftershock.mjs && electron-builder --publish never",
-    "dist:win": "npm run build && node scripts/stage-aftershock.mjs && electron-builder --win nsis --publish never",
+    "dist": "npm run build && node scripts/stage-aftershock.mjs && node scripts/stage-adb.mjs && electron-builder --publish never",
+    "dist:win": "npm run build && node scripts/stage-aftershock.mjs && node scripts/stage-adb.mjs && electron-builder --win nsis --publish never",
     "icon": "node scripts/generate-icon.mjs"
   },
   "dependencies": {

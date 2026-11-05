@@ -4,6 +4,7 @@ dist
 release
 android app/
 resources/aftershock/
+resources/platform-tools/
 .DS_Store
 Thumbs.db
 *.log

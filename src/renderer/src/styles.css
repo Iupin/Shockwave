@@ -45,6 +45,40 @@ button {
   cursor: pointer;
 }
 
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #5a5a5a transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #5a5a5a;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #8a8a8a;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
 .app {
   height: 100%;
   display: grid;
@@ -288,6 +322,18 @@ button {
 .ghost:hover {
   border-color: #fff;
   transform: scale(1.03);
+}
+
+.ghost:disabled {
+  opacity: 0.4;
+  color: var(--subtle);
+  border-color: #3e3e3e;
+  cursor: default;
+}
+
+.ghost:disabled:hover {
+  border-color: #3e3e3e;
+  transform: none;
 }
 
 .content {
@@ -625,6 +671,75 @@ button {
   justify-content: flex-end;
   align-items: center;
   gap: 8px;
+}
+
+.player-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+}
+
+.player-icon:hover:not(:disabled) {
+  color: var(--text);
+}
+
+.player-icon.attention,
+.player-icon.attention:hover:not(:disabled) {
+  color: var(--green);
+  animation: aftershock-glow 1.6s ease-in-out infinite;
+}
+
+@keyframes aftershock-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 2px var(--green));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px var(--green));
+  }
+}
+
+.player-icon:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.wizard {
+  width: min(520px, calc(100% - 32px));
+}
+
+.wizard-kicker {
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.wizard-count {
+  color: var(--subtle);
+  font-size: 12px;
+  margin-top: -8px;
+}
+
+.wizard-steps {
+  color: var(--muted);
+  margin: 0 0 16px;
+  padding-left: 18px;
+  line-height: 1.55;
+}
+
+.wizard-steps li + li {
+  margin-top: 6px;
+}
+
+.wizard-error {
+  color: #f87171;
+  margin-bottom: 12px;
+  white-space: pre-wrap;
 }
 
 .volume {

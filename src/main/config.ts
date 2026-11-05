@@ -6,12 +6,16 @@ export interface UserConfig {
   repositoryPath: string | null
   lastSeenVersion: string | null
   discordRichPresence: boolean
+  aftershockInstalled: boolean
+  aftershockPromptSeen: boolean
 }
 
 const DEFAULT_CONFIG: UserConfig = {
   repositoryPath: null,
   lastSeenVersion: null,
-  discordRichPresence: true
+  discordRichPresence: true,
+  aftershockInstalled: false,
+  aftershockPromptSeen: false
 }
 
 function configPath(): string {
@@ -28,7 +32,9 @@ export function readUserConfig(): UserConfig {
     return {
       repositoryPath: typeof parsed.repositoryPath === 'string' ? parsed.repositoryPath : null,
       lastSeenVersion: typeof parsed.lastSeenVersion === 'string' ? parsed.lastSeenVersion : null,
-      discordRichPresence: parsed.discordRichPresence !== false
+      discordRichPresence: parsed.discordRichPresence !== false,
+      aftershockInstalled: parsed.aftershockInstalled === true,
+      aftershockPromptSeen: parsed.aftershockPromptSeen === true
     }
   } catch {
     return { ...DEFAULT_CONFIG }

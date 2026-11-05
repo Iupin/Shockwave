@@ -1,7 +1,15 @@
 import { app, BrowserWindow, dialog, ipcMain, protocol, session, shell } from 'electron'
 import { existsSync, readdirSync } from 'fs'
 import { join } from 'path'
-import { AppSettings, AppState, PresencePayload, SearchResults, TrackEdit } from '../shared/types'
+import {
+  AftershockEndpoint,
+  AftershockPairRequest,
+  AppSettings,
+  AppState,
+  PresencePayload,
+  SearchResults,
+  TrackEdit
+} from '../shared/types'
 import { dismissChangelog, pendingChangelog, rememberCurrentVersion } from './changelog'
 import { readUserConfig, writeUserConfig } from './config'
 import { setDiscordEnabled, setPresence, startDiscord, stopDiscord } from './discord'
@@ -17,6 +25,7 @@ import {
 } from './playlists'
 import { RepositoryLayout, ensureRepository, loadSettings, saveSettings } from './repository'
 import { fileResponse } from './media'
+import { connectAftershock, installAftershock, pairAftershock } from './aftershock-install'
 import { syncLibrary } from './sync'
 import { checkForUpdates, configureUpdater, downloadUpdate, getUpdateStatus, installUpdate } from './updater'
 
@@ -64,7 +73,9 @@ async function buildState(): Promise<AppState> {
       playlists: [],
       settings: loadSettingsFallback(),
       appVersion: app.getVersion(),
-      discordRichPresence: config.discordRichPresence
+      discordRichPresence: config.discordRichPresence,
+      aftershockInstalled: config.aftershockInstalled,
+      aftershockPromptSeen: config.aftershockPromptSeen
     }
   }
   layout = ensureRepository(config.repositoryPath)
@@ -75,7 +86,9 @@ async function buildState(): Promise<AppState> {
     playlists: loadPlaylists(layout),
     settings: loadSettings(layout),
     appVersion: app.getVersion(),
-    discordRichPresence: config.discordRichPresence
+    discordRichPresence: config.discordRichPresence,
+    aftershockInstalled: config.aftershockInstalled,
+    aftershockPromptSeen: config.aftershockPromptSeen
   }
 }
 
@@ -296,6 +309,24 @@ ipcMain.handle('pending-changelog', () => pendingChangelog())
 ipcMain.handle('dismiss-changelog', () => dismissChangelog())
 ipcMain.handle('set-presence', (_event, payload: PresencePayload | null) => setPresence(payload))
 ipcMain.handle('sync-aftershock', () => syncLibrary(requireLayout(), (status) => send('sync-status', status)))
+ipcMain.handle('mark-aftershock-prompt-seen', async () => {
+  writeUserConfig({ aftershockPromptSeen: true })
+  await refreshRenderer()
+})
+ipcMain.handle('mark-aftershock-installed', async () => {
+  writeUserConfig({ aftershockInstalled: true })
+  await refreshRenderer()
+})
+ipcMain.handle('pair-aftershock', (_event, input: AftershockPairRequest) => pairAftershock(input))
+ipcMain.handle('connect-aftershock', (_event, input: AftershockEndpoint) => connectAftershock(input))
+ipcMain.handle('install-aftershock', async (_event, input: AftershockEndpoint) => {
+  const outcome = await installAftershock(input)
+  if (outcome.ok) {
+    writeUserConfig({ aftershockInstalled: true })
+    await refreshRenderer()
+  }
+  return outcome
+})
 ipcMain.handle('set-discord-enabled', async (_event, value: boolean) => {
   await setDiscordEnabled(value)
   await refreshRenderer()

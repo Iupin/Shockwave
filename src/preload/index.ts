@@ -1,5 +1,8 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type {
+  AftershockCommandResult,
+  AftershockEndpoint,
+  AftershockPairRequest,
   AppSettings,
   AppState,
   ChangelogPayload,
@@ -39,6 +42,14 @@ const api = {
   setPresence: (payload: PresencePayload | null) => ipcRenderer.invoke('set-presence', payload),
   setDiscordEnabled: (enabled: boolean) => ipcRenderer.invoke('set-discord-enabled', enabled),
   syncAftershock: (): Promise<SyncStatus> => ipcRenderer.invoke('sync-aftershock'),
+  markAftershockInstalled: (): Promise<void> => ipcRenderer.invoke('mark-aftershock-installed'),
+  markAftershockPromptSeen: (): Promise<void> => ipcRenderer.invoke('mark-aftershock-prompt-seen'),
+  pairAftershock: (input: AftershockPairRequest): Promise<AftershockCommandResult> =>
+    ipcRenderer.invoke('pair-aftershock', input),
+  connectAftershock: (input: AftershockEndpoint): Promise<AftershockCommandResult> =>
+    ipcRenderer.invoke('connect-aftershock', input),
+  installAftershock: (input: AftershockEndpoint): Promise<AftershockCommandResult> =>
+    ipcRenderer.invoke('install-aftershock', input),
   onSyncStatus: (callback: (status: SyncStatus) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, status: SyncStatus): void => callback(status)
     ipcRenderer.on('sync-status', listener)

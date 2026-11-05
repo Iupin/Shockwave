@@ -33,7 +33,9 @@ export function configureUpdater(onChange: (next: UpdateStatus) => void): void {
   status.currentVersion = app.getVersion()
 
   autoUpdater.autoDownload = false
-  autoUpdater.autoInstallOnAppQuit = true
+  // Install only when the user asks. A silent install starts while Shockwave
+  // is still quitting, and the NSIS uninstaller then fails if a file is open.
+  autoUpdater.autoInstallOnAppQuit = false
   autoUpdater.allowDowngrade = false
   autoUpdater.allowPrerelease = false
   autoUpdater.setFeedURL(FEED)
@@ -70,7 +72,7 @@ export function configureUpdater(onChange: (next: UpdateStatus) => void): void {
       phase: 'ready',
       availableVersion: info.version,
       percent: 100,
-      message: 'Update ready. Restart to install silently.'
+      message: 'Update ready. Restart to install.'
     })
   })
 
@@ -127,5 +129,5 @@ export async function downloadUpdate(): Promise<UpdateStatus> {
 }
 
 export function installUpdate(): void {
-  autoUpdater.quitAndInstall(true, true)
+  autoUpdater.quitAndInstall(false, true)
 }
